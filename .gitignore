@@ -1,0 +1,7 @@
+*.exe
+*.dll
+.vscode/
+*.pdb
+*.def
+*.lib
+targets.json
