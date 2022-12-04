@@ -8,7 +8,18 @@
 
 #include <stdio.h>
 
+typedef enum mirroring {
+    Horizontal,
+    Vertical,
+} mirroring;
+
 typedef struct rom {
+    u8 PrgRomBankCount;
+    u32 MapperId;
+    mirroring Mirroring;
+    bool32 IgnoreMirroring;
+    bool32 HasPrgRam;
+    bool32 HasTrainer;
     u8* Prg;
 } rom;
 
@@ -48,14 +59,90 @@ LoadFile(char* FileName, void* DestinationMemory) {
     return Result;
 }
 
+#define INesHeaderSize (16)
+#define INesTrainerSize (512)
+#define INesPrgBanksCount (4)
+#define INesFlags6 (6)
+#define INesFlags7 (7)
+
+#define INesFlags6Mirroring       (0b00000001)
+#define INesFlags6PrgRam          (0b00000010)
+#define INesFlags6Trainer         (0b00000100)
+#define INesFlags6IgnoreMirroring (0b00001000)
+#define INesFlags6MapperIdLow     (0b11110000)
+
+#define INesFlags7MapperIdHigh    (0b11110000)
+
+#define MapperNROM (0)
+
+internal rom ParseRom(loaded_file LoadedFile) {
+    rom Result = {0};
+
+    Result.PrgRomBankCount = LoadedFile.Data[INesPrgBanksCount];
+    Result.MapperId = (LoadedFile.Data[INesFlags7] & INesFlags7MapperIdHigh) | ((LoadedFile.Data[INesFlags6] & INesFlags6MapperIdLow) >> 4);
+    Result.Mirroring = (LoadedFile.Data[INesFlags6] & INesFlags6Mirroring) ? Vertical : Horizontal;
+    Result.IgnoreMirroring = LoadedFile.Data[INesFlags6] & INesFlags6IgnoreMirroring;
+    Result.HasPrgRam = LoadedFile.Data[INesFlags6] & INesFlags6PrgRam;
+    Result.HasTrainer = LoadedFile.Data[INesFlags6] & INesFlags6Trainer;
+
+    u8* PrgSectionStart = LoadedFile.Data +
+                          INesHeaderSize +
+                          ((Result.HasTrainer) ? INesTrainerSize : 0);
+
+    Result.Prg = PrgSectionStart;
+
+    Assert(!Result.HasPrgRam);
+    Assert(Result.MapperId == MapperNROM);    
+
+    return Result;
+}
+
+#define RamSize (1024 * 2)
+#define PrgBankSize (16384)
+
 internal u8
 MemoryRead(bus* Bus, u16 Address) {
+    if (Address >= 0x4020 && Address <= 0xFFFF) {
+        //Mapper space
+        Assert(Bus->Rom->MapperId == MapperNROM);
+        
+        u16 BaseAddress = Address - 0x4020;
+
+        
+
+        if (Bus->Rom->PrgRomBankCount == 2) {
+            return Bus->Rom->Prg[BaseAddress];
+        } else if (Bus->Rom->PrgRomBankCount == 1) {
+            if (BaseAddress > PrgBankSize) {
+                BaseAddress -= PrgBankSize;
+                return Bus->Rom->Prg[BaseAddress];
+            } else {
+                return Bus->Rom->Prg[BaseAddress];
+            }
+        } else {
+            Halt("Not sure, need debugging.");
+        }
+    }
+
     return 0xEA;
 }
 
 internal void
 MemoryWrite(bus* Bus, u16 Address, u8 Value) {
-    Halt("TODO: Need writing!");
+    if (Address >= 0x2000 && Address <= 0X2007) {
+        // PPU Registers
+        //TODO: need to store properly
+    } else if (Address >= 0x0000 && Address <= 0X1FFF) {
+        // RAM
+        DumpU16HexExpression(Address);
+        DumpU8HexExpression(Value);
+        u16 RamBaseAddress = Address % RamSize;
+        Bus->Ram[RamBaseAddress] = Value;
+    } else {
+        DumpU16HexExpression(Address);
+        DumpU8HexExpression(Value);
+        Halt("TODO: Need writing!");
+    }
 }
 
 void
@@ -78,24 +165,29 @@ int main(int argc, char** argv) {
 
     loaded_file RomFile = LoadFile(ROM_PATH, TempMemory);
 
-    Assert(RomFile.Size == 40976);
     Assert(RomFile.Data[0] == 0x4E);
     Assert(RomFile.Data[1] == 0x45);
     Assert(RomFile.Data[2] == 0x53);
     Assert(RomFile.Data[3] == 0x1A);
 
+    u8* Ram[RamSize] = {0};
+
+    rom Rom = ParseRom(RomFile);
+    bus Bus = {0};
+    Bus.Rom = &Rom;
+    Bus.Ram = (u8*)Ram;
+
     m6502_t Cpu;
     m6502_desc_t CpuDesc = {0};
     uint64_t Pins = m6502_init(&Cpu, &CpuDesc);
-    for (i32 TickIndex = 0; TickIndex < 20; TickIndex++) {
+    //for (i32 TickIndex = 0; TickIndex < 2000; TickIndex++) {
+    while (1) {
         Pins = m6502_tick(&Cpu, Pins);
         u16 Address = M6502_GET_ADDR(Pins);
         if (Pins & M6502_RW) {
-            bus Bus = {0};
             u8 MemoryValue = MemoryRead(&Bus, Address);
             M6502_SET_DATA(Pins, MemoryValue);
         } else {
-            bus Bus = {0};
             u8 MemoryValueToWrite = M6502_GET_DATA(Pins);
             MemoryWrite(&Bus, Address, MemoryValueToWrite);
         }
