@@ -47,7 +47,7 @@ PlatformPrint(char* message, ...);
 #define DumpU8HexExpression(Expression) (PlatformPrint("\tExpression: %s: %02X", #Expression, Expression))
 #define DumpFloatExpression(Expression) (PlatformPrint("\tExpression: %s: %.4f", #Expression, Expression))
 #define DumpStringExpression(Expression) (PlatformPrint("\tExpression: %s: '%s'", #Expression, Expression))
-#define DumpMemoryByte(Pointer) (PlatformPrint("\tMemory %p: '%02x'", Pointer, *(u8*)Pointer))
+#define DumpMemoryByte(Pointer) (PlatformPrint("\tMemory %p: '%02X'", Pointer, *(u8*)Pointer))
 
 #if HOT_CODE
 #define ExportApi __declspec(dllexport)
