@@ -74,7 +74,89 @@ typedef struct instruction_info {
     bool32 Unofficial;
 } instruction_info;
 
-global_variable instruction_info Instructions[0xFF];
+global_variable instruction_info Instructions[0xFF] = {0};
+
+internal u8*
+MnemonicToString(instruction_mnemonic Mnemonic) {
+    switch (Mnemonic) {
+        case ADC: return "ADC";
+        case ANC: return "ANC";
+        case AND: return "AND";
+        case ANE: return "ANE";
+        case ARR: return "ARR";
+        case ASL: return "ASL";
+        case ASR: return "ASR";
+        case BCC: return "BCC";
+        case BCS: return "BCS";
+        case BEQ: return "BEQ";
+        case BIT: return "BIT";
+        case BMI: return "BMI";
+        case BNE: return "BNE";
+        case BPL: return "BPL";
+        case BRK: return "BRK";
+        case BVC: return "BVC";
+        case BVS: return "BVS";
+        case CLC: return "CLC";
+        case CLD: return "CLD";
+        case CLI: return "CLI";
+        case CLV: return "CLV";
+        case CMP: return "CMP";
+        case CPX: return "CPX";
+        case CPY: return "CPY";
+        case DCP: return "DCP";
+        case DEC: return "DEC";
+        case DEX: return "DEX";
+        case DEY: return "DEY";
+        case EOR: return "EOR";
+        case INC: return "INC";
+        case INX: return "INX";
+        case INY: return "INY";
+        case ISB: return "ISB";
+        case JMP: return "JMP";
+        case JSR: return "JSR";
+        case LAS: return "LAS";
+        case LAX: return "LAX";
+        case LDA: return "LDA";
+        case LDX: return "LDX";
+        case LDY: return "LDY";
+        case LSR: return "LSR";
+        case LXA: return "LXA";
+        case NOP: return "NOP";
+        case ORA: return "ORA";
+        case PHA: return "PHA";
+        case PHP: return "PHP";
+        case PLA: return "PLA";
+        case PLP: return "PLP";
+        case RLA: return "RLA";
+        case ROL: return "ROL";
+        case ROR: return "ROR";
+        case RRA: return "RRA";
+        case RTI: return "RTI";
+        case RTS: return "RTS";
+        case SAX: return "SAX";
+        case SBC: return "SBC";
+        case SBX: return "SBX";
+        case SEC: return "SEC";
+        case SED: return "SED";
+        case SEI: return "SEI";
+        case SHA: return "SHA";
+        case SHS: return "SHS";
+        case SHX: return "SHX";
+        case SHY: return "SHY";
+        case SLO: return "SLO";
+        case SRE: return "SRE";
+        case STA: return "STA";
+        case STX: return "STX";
+        case STY: return "STY";
+        case TAX: return "TAX";
+        case TAY: return "TAY";
+        case TSX: return "TSX";
+        case TXA: return "TXA";
+        case TXS: return "TXS";
+        case TYA: return "TYA";
+        case UNS: return "UNS";
+    }
+}
 
 internal void
 InitInstructionsDictionary(instruction_info* Instructions) {
@@ -819,8 +901,6 @@ MemoryRead(bus* Bus, u16 Address) {
         
         u16 BaseAddress = Address - 0x4020;
 
-        
-
         if (Bus->Rom->PrgRomBankCount == 2) {
             return Bus->Rom->Prg[BaseAddress];
         } else if (Bus->Rom->PrgRomBankCount == 1) {
@@ -867,8 +947,28 @@ PlatformPrint(char* FormatString, ...) {
 }
 
 global_variable u8 TempMemory[Megabytes(1)];
+global_variable u8 StringData[Megabytes(10)];
+global_variable u8* DisassemblyDict[0xFFFF];
 
-#define ROM_PATH ("Super Mario Bros. (JU) [!].nes")
+#define RomPath ("Super Mario Bros. (JU) [!].nes")
+
+internal void
+Dissasemble(bus* Bus, instruction_info* InstructionsDict, u8** DisassemblyDict, u8* StringData) {
+    u16 Address = 0x0000;
+
+    do {
+        u8 InstructionValue = MemoryRead(Bus, Address);
+        if (InstructionsDict[InstructionValue].Mnemonic != UNS) {
+            DumpU16HexExpression(Address);
+            DumpU8HexExpression(InstructionValue);
+            DumpIntExpression(InstructionsDict[InstructionValue].Mnemonic);
+            DumpStringExpression(MnemonicToString(InstructionsDict[InstructionValue].Mnemonic));
+        }
+
+        Address++;
+        //DumpU16HexExpression(Address);
+    } while (Address < 0xFFFF);
+}
 
 int main(int argc, char** argv) {
     Unused(argc);
@@ -876,7 +976,7 @@ int main(int argc, char** argv) {
 
     InitInstructionsDictionary(Instructions);
 
-    loaded_file RomFile = LoadFile(ROM_PATH, TempMemory);
+    loaded_file RomFile = LoadFile(RomPath, TempMemory);
 
     Assert(RomFile.Data[0] == 0x4E);
     Assert(RomFile.Data[1] == 0x45);
@@ -889,6 +989,8 @@ int main(int argc, char** argv) {
     bus Bus = {0};
     Bus.Rom = &Rom;
     Bus.Ram = (u8*)Ram;
+
+    Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
 
     m6502_t Cpu;
     m6502_desc_t CpuDesc = {0};
