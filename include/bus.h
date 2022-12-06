@@ -29,7 +29,7 @@ MemoryRead(bus* Bus, u16 Address) {
         }
     }
 
-    return 0xEA;
+    return 0x00;
 }
 
 internal void
@@ -39,8 +39,8 @@ MemoryWrite(bus* Bus, u16 Address, u8 Value) {
         //TODO: need to store properly
     } else if (Address >= 0x0000 && Address <= 0X1FFF) {
         // RAM
-        DumpU16HexExpression(Address);
-        DumpU8HexExpression(Value);
+        // DumpU16HexExpression(Address);
+        // DumpU8HexExpression(Value);
         u16 RamBaseAddress = Address % RamSize;
         Bus->Ram[RamBaseAddress] = Value;
     } else {

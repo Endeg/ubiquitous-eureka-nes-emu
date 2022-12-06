@@ -12,3 +12,4 @@ targets.json
 *.ilk
 *.sln
 out.txt
+*.png

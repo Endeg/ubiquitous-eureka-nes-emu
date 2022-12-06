@@ -29,7 +29,7 @@ typedef enum instruction_mnemonic {
   RLA, ROL, ROR, RRA, RTI, RTS, SAX, SBC,
   SBX, SEC, SED, SEI, SHA, SHS, SHX, SHY,
   SLO, SRE, STA, STX, STY, TAX, TAY, TSX,
-  TXA, TXS, TYA, UNS,
+  TXA, TXS, TYA, HLT,
 } instruction_mnemonic;
 
 typedef struct instruction_info {
@@ -116,7 +116,7 @@ MnemonicToString(instruction_mnemonic Mnemonic) {
         case TXA: return "TXA";
         case TXS: return "TXS";
         case TYA: return "TYA";
-        case UNS: return "UNS";
+        case HLT: return "HLT";
         default : return "???";
     }
 }
@@ -135,14 +135,14 @@ InitInstructionsDictionary(instruction_info* Instructions) {
     Instructions[0x60].Mnemonic = RTS;
     Instructions[0x60].AddressingMode = Implicit;
     Instructions[0x80].Mnemonic = NOP;
-    Instructions[0x80].AddressingMode = Implicit;
+    Instructions[0x80].AddressingMode = Immediate;
     Instructions[0x80].Unofficial = 1;
     Instructions[0xA0].Mnemonic = LDY;
-    Instructions[0xA0].AddressingMode = Implicit;
+    Instructions[0xA0].AddressingMode = Immediate;
     Instructions[0xC0].Mnemonic = CPY;
-    Instructions[0xC0].AddressingMode = Implicit;
+    Instructions[0xC0].AddressingMode = Immediate;
     Instructions[0xE0].Mnemonic = CPX;
-    Instructions[0xE0].AddressingMode = Implicit;
+    Instructions[0xE0].AddressingMode = Immediate;
     // set  00      20      40      60      80      a0      c0      e0      mode
     // +01  ORA     AND     EOR     ADC     STA     LDA     CMP     SBC     (indir,x)
     Instructions[0x01].Mnemonic = ORA;
@@ -163,24 +163,24 @@ InitInstructionsDictionary(instruction_info* Instructions) {
     Instructions[0xE1].AddressingMode = IndirectX;
     // set  00      20      40      60      80      a0      c0      e0      mode
     // +02   t       t       t       t      NOP*t   LDX     NOP*t   NOP*t     ? /immed
-    Instructions[0x02].Mnemonic = UNS;
+    Instructions[0x02].Mnemonic = HLT;
     Instructions[0x02].AddressingMode = Implicit;
-    Instructions[0x22].Mnemonic = UNS;
+    Instructions[0x22].Mnemonic = HLT;
     Instructions[0x22].AddressingMode = Implicit;
-    Instructions[0x42].Mnemonic = UNS;
+    Instructions[0x42].Mnemonic = HLT;
     Instructions[0x42].AddressingMode = Implicit;
-    Instructions[0x62].Mnemonic = UNS;
+    Instructions[0x62].Mnemonic = HLT;
     Instructions[0x62].AddressingMode = Implicit;
     Instructions[0x82].Mnemonic = NOP;
-    Instructions[0x82].AddressingMode = Implicit;
+    Instructions[0x82].AddressingMode = Immediate;
     Instructions[0x82].Unofficial = 1;
     Instructions[0xA2].Mnemonic = LDX;
-    Instructions[0xA2].AddressingMode = Implicit;
+    Instructions[0xA2].AddressingMode = Immediate;
     Instructions[0xC2].Mnemonic = NOP;
-    Instructions[0xC2].AddressingMode = Implicit;
+    Instructions[0xC2].AddressingMode = Immediate;
     Instructions[0xC2].Unofficial = 1;
     Instructions[0xE2].Mnemonic = NOP;
-    Instructions[0xE2].AddressingMode = Implicit;
+    Instructions[0xE2].AddressingMode = Immediate;
     Instructions[0xE2].Unofficial = 1;
     // set  00      20      40      60      80      a0      c0      e0      mode
     // +03  SLO*    RLA*    SRE*    RRA*    SAX*    LAX*    DCP*    ISB*    (indir,x)
@@ -211,15 +211,15 @@ InitInstructionsDictionary(instruction_info* Instructions) {
     // set  00      20      40      60      80      a0      c0      e0      mode
     // +04  NOP*    BIT     NOP*    NOP*    STY     LDY     CPY     CPX     Zeropage
     Instructions[0x04].Mnemonic = NOP;
-    Instructions[0x04].AddressingMode = ZeroPageX;
+    Instructions[0x04].AddressingMode = ZeroPage;
     Instructions[0x04].Unofficial = 1;
     Instructions[0x24].Mnemonic = BIT;
     Instructions[0x24].AddressingMode = ZeroPageX;
     Instructions[0x44].Mnemonic = NOP;
-    Instructions[0x44].AddressingMode = ZeroPageX;
+    Instructions[0x44].AddressingMode = ZeroPage;
     Instructions[0x44].Unofficial = 1;
     Instructions[0x64].Mnemonic = NOP;
-    Instructions[0x64].AddressingMode = ZeroPageX;
+    Instructions[0x64].AddressingMode = ZeroPage;
     Instructions[0x64].Unofficial = 1;
     Instructions[0x84].Mnemonic = STY;
     Instructions[0x84].AddressingMode = ZeroPageX;
@@ -491,21 +491,21 @@ InitInstructionsDictionary(instruction_info* Instructions) {
     Instructions[0xF1].AddressingMode = IndirectY;
     // set  00      20      40      60      80      a0      c0      e0      mode
     // +12   t       t       t       t       t       t       t       t         ?
-    Instructions[0x12].Mnemonic = UNS;
+    Instructions[0x12].Mnemonic = HLT;
     Instructions[0x12].AddressingMode = Implicit;
-    Instructions[0x32].Mnemonic = UNS;
+    Instructions[0x32].Mnemonic = HLT;
     Instructions[0x32].AddressingMode = Implicit;
-    Instructions[0x52].Mnemonic = UNS;
+    Instructions[0x52].Mnemonic = HLT;
     Instructions[0x52].AddressingMode = Implicit;
-    Instructions[0x72].Mnemonic = UNS;
+    Instructions[0x72].Mnemonic = HLT;
     Instructions[0x72].AddressingMode = Implicit;
-    Instructions[0x92].Mnemonic = UNS;
+    Instructions[0x92].Mnemonic = HLT;
     Instructions[0x92].AddressingMode = Implicit;
-    Instructions[0xB2].Mnemonic = UNS;
+    Instructions[0xB2].Mnemonic = HLT;
     Instructions[0xB2].AddressingMode = Implicit;
-    Instructions[0xD2].Mnemonic = UNS;
+    Instructions[0xD2].Mnemonic = HLT;
     Instructions[0xD2].AddressingMode = Implicit;
-    Instructions[0xF2].Mnemonic = UNS;
+    Instructions[0xF2].Mnemonic = HLT;
     Instructions[0xF2].AddressingMode = Implicit;
     // set  00      20      40      60      80      a0      c0      e0      mode
     // +13  SLO*    RLA*    SRE*    RRA*    SHA**   LAX*    DCP*    ISB*    (indir),y
@@ -814,117 +814,121 @@ internal i32 AddressingModeToSize(addressing_mode AddressingMode) {
     }
 }
 
+internal void PrintDisassembledInstruction(u16 Address,
+                                           u8 InstructionOpCode,
+                                           bus* Bus,
+                                           instruction_info* InstructionsDict) {
+    u8* MnemonicString = MnemonicToString(InstructionsDict[InstructionOpCode].Mnemonic);
+
+    switch (InstructionsDict[InstructionOpCode].AddressingMode)
+    {
+        case Implicit: {
+            PlatformPrint("%04X: (%02X)         %s",
+                Address,
+                InstructionOpCode,
+                MnemonicString);
+        } break;
+        case Accumulator: {
+            PlatformPrint("%04X: (%02X)         %s A",
+                Address,
+                InstructionOpCode,
+                MnemonicString);
+        } break;
+        case Immediate: {
+            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            PlatformPrint("%04X: (%02X, %02X)     %s #$%02X",
+                Address,
+                InstructionOpCode, ArgumentValue,
+                MnemonicString, ArgumentValue);
+        } break;
+        case ZeroPage: {
+            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            PlatformPrint("%04X: (%02X, %02X)     %s $%02X",
+                Address,
+                InstructionOpCode, ArgumentValue,
+                MnemonicString, ArgumentValue);
+        } break;
+        case ZeroPageX: {
+            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            PlatformPrint("%04X: (%02X, %02X)     %s $%02X,X",
+                Address,
+                InstructionOpCode, ArgumentValue,
+                MnemonicString, ArgumentValue);
+        } break;
+        case ZeroPageY: {
+            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            PlatformPrint("%04X: (%02X, %02X)     %s $%02X,Y",
+                Address,
+                InstructionOpCode, ArgumentValue,
+                MnemonicString, ArgumentValue);
+        } break;
+        case Relative: {
+            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            PlatformPrint("%04X: (%02X, %02X)     %s *%d",
+                Address,
+                InstructionOpCode, ArgumentValue,
+                MnemonicString, (i8)ArgumentValue);
+        } break;
+        case Absolute: {
+            u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
+            PlatformPrint("%04X: (%02X, %02X, %02X) %s $%02X%02X",
+                Address,
+                InstructionOpCode, ArgumentValue1, ArgumentValue2,
+                MnemonicString, ArgumentValue2, ArgumentValue1);
+        } break;
+        case AbsoluteX: {
+            u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
+            PlatformPrint("%04X: (%02X, %02X, %02X) %s $%02X%02X,X",
+                Address,
+                InstructionOpCode, ArgumentValue1, ArgumentValue2,
+                MnemonicString, ArgumentValue2, ArgumentValue1);
+        } break;
+        case AbsoluteY: {
+            u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
+            PlatformPrint("%04X: (%02X, %02X, %02X) %s $%02X%02X,Y",
+                Address,
+                InstructionOpCode, ArgumentValue1, ArgumentValue2,
+                MnemonicString, ArgumentValue2, ArgumentValue1);
+        } break;
+        case Indirect: {
+            u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
+            PlatformPrint("%04X: (%02X, %02X, %02X) %s $(%02X%02X)",
+                Address,
+                InstructionOpCode, ArgumentValue1, ArgumentValue2,
+                MnemonicString, ArgumentValue2, ArgumentValue1);
+        } break;
+        case IndirectX: {
+            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            PlatformPrint("%04X: (%02X, %02X)     %s ($%02X,X)",
+                Address,
+                InstructionOpCode, ArgumentValue,
+                MnemonicString, ArgumentValue);
+        } break;
+        case IndirectY: {
+            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            PlatformPrint("%04X: (%02X, %02X)     %s ($%02X),Y",
+                Address,
+                InstructionOpCode, ArgumentValue,
+                MnemonicString, ArgumentValue);
+        } break;
+    }
+}
+
 internal void
 Dissasemble(bus* Bus, instruction_info* InstructionsDict, u8** DisassemblyDict, u8* StringData) {
     u32 Address = 0x0000;
 
     do {
-        u8 InstructionValue = MemoryRead(Bus, Address);
-        if (InstructionsDict[InstructionValue].Mnemonic == UNS) {
-            Address++;
-            continue;
-        }
+        u8 InstructionOpCode = MemoryRead(Bus, Address);
+        PrintDisassembledInstruction(
+            Address, InstructionOpCode, Bus, InstructionsDict);
 
-        i32 InstructionSize = AddressingModeToSize(InstructionsDict[InstructionValue].AddressingMode);
-
-        u8* MnemonicString = MnemonicToString(InstructionsDict[InstructionValue].Mnemonic);
-
-        switch (InstructionsDict[InstructionValue].AddressingMode)
-        {
-            case Accumulator: {
-                PlatformPrint("$%04X: (%02X)         %s A",
-                    Address,
-                    InstructionValue,
-                    MnemonicString);
-            } break;
-            case Immediate: {
-                u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-                PlatformPrint("$%04X: (%02X, %02X)     %s #%d",
-                    Address,
-                    InstructionValue, ArgumentValue,
-                    MnemonicString, ArgumentValue);
-            } break;
-            case ZeroPage: {
-                u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-                PlatformPrint("$%04X: (%02X, %02X)     %s $%02X",
-                    Address,
-                    InstructionValue, ArgumentValue,
-                    MnemonicString, ArgumentValue);
-            } break;
-            case ZeroPageX: {
-                u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-                PlatformPrint("$%04X: (%02X, %02X)     %s $%02X,X",
-                    Address,
-                    InstructionValue, ArgumentValue,
-                    MnemonicString, ArgumentValue);
-            } break;
-            case ZeroPageY: {
-                u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-                PlatformPrint("$%04X: (%02X, %02X)     %s $%02X,Y",
-                    Address,
-                    InstructionValue, ArgumentValue,
-                    MnemonicString, ArgumentValue);
-            } break;
-            case Relative: {
-                u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-                PlatformPrint("$%04X: (%02X, %02X)     %s *%d     ",
-                    Address,
-                    InstructionValue, ArgumentValue,
-                    MnemonicString, (i8)ArgumentValue);
-            } break;
-            case Absolute: {
-                u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
-                u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
-                PlatformPrint("$%04X: (%02X, %02X, %02X) %s $%02X%02X",
-                    Address,
-                    InstructionValue, ArgumentValue1, ArgumentValue2,
-                    MnemonicString, ArgumentValue2, ArgumentValue1);
-            } break;
-            case AbsoluteX: {
-                u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
-                u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
-                PlatformPrint("$%04X: (%02X, %02X, %02X) %s $%02X%02X,X",
-                    Address,
-                    InstructionValue, ArgumentValue1, ArgumentValue2,
-                    MnemonicString, ArgumentValue2, ArgumentValue1);
-            } break;
-            case AbsoluteY: {
-                u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
-                u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
-                PlatformPrint("$%04X: (%02X, %02X, %02X) %s $%02X%02X,Y",
-                    Address,
-                    InstructionValue, ArgumentValue1, ArgumentValue2,
-                    MnemonicString, ArgumentValue2, ArgumentValue1);
-            } break;
-            case Indirect: {
-                u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
-                u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
-                PlatformPrint("$%04X: (%02X, %02X, %02X) %s $(%02X%02X)",
-                    Address,
-                    InstructionValue, ArgumentValue1, ArgumentValue2,
-                    MnemonicString, ArgumentValue2, ArgumentValue1);
-            } break;
-            case IndirectX: {
-                u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-                PlatformPrint("$%04X: (%02X, %02X)     %s ($%02X,X)",
-                    Address,
-                    InstructionValue, ArgumentValue,
-                    MnemonicString, ArgumentValue);
-            } break;
-            case IndirectY: {
-                u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-                PlatformPrint("$%04X: (%02X, %02X)     %s ($%02X),Y",
-                    Address,
-                    InstructionValue, ArgumentValue,
-                    MnemonicString, ArgumentValue);
-            } break;
-            
-            default:
-                break;
-        }
-
-        //PlatformPrint("$%04X : %s", Address, MnemonicToString(InstructionsDict[InstructionValue].Mnemonic));
-
+        i32 InstructionSize = AddressingModeToSize(
+            InstructionsDict[InstructionOpCode].AddressingMode);
         Address += InstructionSize;
     } while (Address <= 0xFFFF);
 }

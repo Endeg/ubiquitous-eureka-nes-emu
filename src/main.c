@@ -137,13 +137,16 @@ int main(int argc, char** argv) {
     Bus.Rom = &Rom;
     Bus.Ram = (u8*)Ram;
 
-    Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
+    //Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
 
     m6502_t Cpu;
     m6502_desc_t CpuDesc = {0};
     uint64_t Pins = m6502_init(&Cpu, &CpuDesc);
-    for (i32 TickIndex = 0; TickIndex < 20; TickIndex++) {
-    // while (1) {
+    for (i32 TickIndex = 0; TickIndex < 2000; TickIndex++) {
+        
+        PrintDisassembledInstruction(
+            Cpu.PC, MemoryRead(&Bus, Cpu.PC), &Bus, Instructions);
+
         Pins = m6502_tick(&Cpu, Pins);
         u16 Address = M6502_GET_ADDR(Pins);
         if (Pins & M6502_RW) {
@@ -153,14 +156,7 @@ int main(int argc, char** argv) {
             u8 MemoryValueToWrite = M6502_GET_DATA(Pins);
             MemoryWrite(&Bus, Address, MemoryValueToWrite);
         }
-
-        // DumpIntExpression(TickIndex);
-        DumpU16HexExpression(Cpu.PC);
-        // DumpU8HexExpression(Cpu.A);
-        // DumpU8HexExpression(Cpu.X);
-        // DumpU8HexExpression(Cpu.Y);
     }
-
 
     return 0;
 }
