@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     Bus.Rom = &Rom;
     Bus.Ram = (u8*)Ram;
 
-    // Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
+    Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
 
     m6502_t Cpu;
     m6502_desc_t CpuDesc = {0};

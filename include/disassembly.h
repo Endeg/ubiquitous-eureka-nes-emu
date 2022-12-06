@@ -839,9 +839,9 @@ Dissasemble(bus* Bus, instruction_info* InstructionsDict, u8** DisassemblyDict, 
             } break;
             case Immediate: {
                 u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-                PlatformPrint("$%04X: (%02X)         %s #%d",
+                PlatformPrint("$%04X: (%02X, %02X)     %s #%d",
                     Address,
-                    InstructionValue,
+                    InstructionValue, ArgumentValue,
                     MnemonicString, ArgumentValue);
             } break;
             case ZeroPage: {
