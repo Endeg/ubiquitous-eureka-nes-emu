@@ -7,6 +7,7 @@
 *.lib
 targets.json
 *.nes
+*.deb
 *.obj
 *.ilk
 *.sln

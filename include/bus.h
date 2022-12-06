@@ -9,6 +9,7 @@
 internal u8
 MemoryRead(bus* Bus, u16 Address) {
     if (Address >= 0x4020 && Address <= 0xFFFF) {
+        //TODO: NROM memory mapping need fixing, Mario starts at $0000 instead of $8000
         //Mapper space
         Assert(Bus->Rom->MapperId == MapperNROM);
         

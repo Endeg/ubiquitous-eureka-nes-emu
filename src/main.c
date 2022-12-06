@@ -137,12 +137,12 @@ int main(int argc, char** argv) {
     Bus.Rom = &Rom;
     Bus.Ram = (u8*)Ram;
 
-    Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
+    // Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
 
     m6502_t Cpu;
     m6502_desc_t CpuDesc = {0};
     uint64_t Pins = m6502_init(&Cpu, &CpuDesc);
-    for (i32 TickIndex = 0; TickIndex < 10; TickIndex++) {
+    for (i32 TickIndex = 0; TickIndex < 20; TickIndex++) {
     // while (1) {
         Pins = m6502_tick(&Cpu, Pins);
         u16 Address = M6502_GET_ADDR(Pins);
