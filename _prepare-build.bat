@@ -1,8 +1,10 @@
 @REM set cc=zig cc -target i386-windows-gnu
 @REM set cc=zig cc -target x86_64-windows-gnu
 @REM set cc=gcc
-set cc=tcc
+@REM set cc=tcc
+set cc=cl
 set Includes=-Iinclude -Iexternal
+set DebugFlags=-Zi
 @REM set Libraries=-lwinmm -lgdi32
 set Libraries=
 set ProjectName=emulator

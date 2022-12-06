@@ -1,9 +1,13 @@
 *.exe
 *.dll
 .vscode/
+.vs/
 *.pdb
 *.def
 *.lib
 targets.json
 *.nes
+*.obj
+*.ilk
+*.sln
 out.txt
