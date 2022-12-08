@@ -45,11 +45,7 @@ typedef struct loaded_file {
 #include "disassembly.h"
 #include "gfx.h"
 #include "system_font.h"
-
-global_variable instruction_info Instructions[0x100] = {0};
-global_variable u8 TempMemory[Megabytes(1)];
-global_variable u8 StringData[Megabytes(10)];
-global_variable u8* DisassemblyDict[0xFFFF];
+#include "dumb_allocator.h"
 
 #define RomPath ("Super Mario Bros. (JU) [!].nes")
 
@@ -123,20 +119,24 @@ PlatformPrint(char* FormatString, ...) {
 #define ScreenWidth (640)
 #define ScreenHeight (480)
 
-global_variable u32 Canvas[ScreenWidth * ScreenHeight] = {0};
+// global_variable u8 StringData[Megabytes(10)];
+// global_variable u8* DisassemblyDict[0xFFFF];
 
 int AppProc(app_t* App, void* UserData) {
-
+    dumb_allocator Allocator = InitDumbAllocator(Megabytes(64));
+    void* RomBuffer = DumbAllocate(&Allocator, Kilobytes(128));
+    instruction_info* Instructions = DumbAllocate(&Allocator, sizeof(instruction_info) * 0x100);
+        
     InitInstructionsDictionary(Instructions);
 
-    loaded_file RomFile = LoadFile(RomPath, TempMemory);
+    loaded_file RomFile = LoadFile(RomPath, RomBuffer);
 
     Assert(RomFile.Data[0] == 0x4E);
     Assert(RomFile.Data[1] == 0x45);
     Assert(RomFile.Data[2] == 0x53);
     Assert(RomFile.Data[3] == 0x1A);
 
-    u8* Ram[RamSize] = {0};
+    u8* Ram = DumbAllocate(&Allocator, Kilobytes(2));
 
     rom Rom = ParseRom(RomFile);
     bus Bus = {0};
@@ -152,7 +152,7 @@ int AppProc(app_t* App, void* UserData) {
     pixel_buffer Screen = {
         ScreenWidth,
         ScreenHeight,
-        Canvas,
+        (u32*)DumbAllocate(&Allocator, sizeof(u32) * ScreenWidth * ScreenHeight),
     };
 
     app_screenmode(App, APP_SCREENMODE_WINDOW);
@@ -172,14 +172,9 @@ int AppProc(app_t* App, void* UserData) {
             MemoryWrite(&Bus, Address, MemoryValueToWrite);
         }
 
-        int x = rand() % ScreenWidth;
-        int y = rand() % ScreenHeight;
-        APP_U32 color = rand() | ( (APP_U32) rand() << 16 );
-        Canvas[x + (y * ScreenHeight)] = color;
-
         PrintToPixelBuffer(&Screen, 1, 1, "The quick brown fox jumps over the lazy dog");
 
-        app_present(App, Canvas, ScreenWidth, ScreenHeight, 0xffffff, 0x000000);
+        app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xffffff, 0x000000);
     }
     return 0;
 }
