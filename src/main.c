@@ -178,9 +178,7 @@ int AppProc(app_t* App, void* UserData) {
         APP_U32 color = rand() | ( (APP_U32) rand() << 16 );
         Canvas[x + (y * ScreenHeight)] = color;
 
-        PutChar(&Screen, 1, 2, 'a');
-        PutChar(&Screen, 2, 2, 'b');
-        PutChar(&Screen, 1, 1, 'c');
+        PrintToPixelBuffer(&Screen, 3, 4, "Hello this is test!");
 
         app_present(App, Canvas, ScreenWidth, ScreenHeight, 0xffffff, 0x000000);
     }

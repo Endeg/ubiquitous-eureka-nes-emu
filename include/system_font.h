@@ -282,11 +282,42 @@ global_variable u8 KC853[2048] = {
 #define EmbeddedFontHeight (EmbeddedFontWidth)
 #define EmbeddedFont (KC853)
 
-internal void PutChar(pixel_buffer* Dest, i32 CellX, i32 CellY, u8 Char) {
+internal void
+PutChar(pixel_buffer* Dest, i32 CellX, i32 CellY, u8 Char) {
     u8* CharRow = EmbeddedFont;
 
-    Dest->Memory[(CellX * EmbeddedFontWidth) + 
-                 (CellY * EmbeddedFontHeight * Dest->Height)] = 0xFFFFFFFF;
+    CharRow += (EmbeddedFontWidth * Char);
+
+    u32* DestRow = Dest->Memory;
+
+    DestRow += (CellY * EmbeddedFontHeight * Dest->Height);
+    DestRow += (CellX * EmbeddedFontWidth);
+
+
+    for (i32 CharPixelY = 0; CharPixelY < EmbeddedFontHeight; CharPixelY++) {
+        u32* DestPixel = DestRow;
+        for (i32 CharPixelX = 0; CharPixelX < EmbeddedFontWidth; CharPixelX++) {
+            u8 CharPixelvalue = *CharRow & (0b10000000 >> CharPixelX);
+            if (CharPixelvalue) {
+                *DestPixel = 0xFFFFFFFF;
+            }
+            DestPixel++;
+        }
+
+        CharRow++;
+        DestRow += Dest->Width;
+    }
+}
+
+internal void
+PrintToPixelBuffer(pixel_buffer* Dest, i32 CellX, i32 CellY, u8* Text) {
+    u8* CurrentChar = Text;
+    i32 TextOffset = 0;
+    while (*CurrentChar != 0) {
+        PutChar(Dest, CellX + TextOffset, CellY, *CurrentChar);
+        CurrentChar++;
+        TextOffset++;
+    }
 }
 
 #endif
