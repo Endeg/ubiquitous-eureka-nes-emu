@@ -116,16 +116,43 @@ PlatformPrint(char* FormatString, ...) {
     printf("PLATFORM: %s\n", FormatBuffer);
 }
 
-#define ScreenWidth (640)
-#define ScreenHeight (480)
+#define ScreenWidth (1280)
+#define ScreenHeight (720)
 
 // global_variable u8 StringData[Megabytes(10)];
 // global_variable u8* DisassemblyDict[0xFFFF];
 
+internal void DrawRam(bus* Bus, pixel_buffer* Buffer, i32 CellX, i32 CellY, u8* CharBuffer) {
+    u16 Address = 0x0000;
+    i32 NumberOfColumns = 16;
+    for (i32 Row = 0; Row < 16; Row++) {
+        sprintf(CharBuffer, "%04X:\0", Address);
+        PrintToPixelBuffer(Buffer,
+                           CellX,
+                           CellY + Row,
+                           CharBuffer);
+
+
+        for (i32 Column = 0; Column < NumberOfColumns; Column++) {
+            u8 MemoryValue = MemoryRead(Bus, Address);
+
+            sprintf(CharBuffer, "%02X\0", MemoryValue);
+
+            PrintToPixelBuffer(Buffer,
+                    CellX + (Column * 3) + 5,
+                    CellY + Row,
+                    CharBuffer);
+
+            Address++;
+        }
+    }
+}
+
 int AppProc(app_t* App, void* UserData) {
-    dumb_allocator Allocator = InitDumbAllocator(Megabytes(64));
+    dumb_allocator Allocator = InitDumbAllocator(Megabytes(8));
     void* RomBuffer = DumbAllocate(&Allocator, Kilobytes(128));
     instruction_info* Instructions = DumbAllocate(&Allocator, sizeof(instruction_info) * 0x100);
+    u8* CharBuffer = DumbAllocate(&Allocator, Kilobytes(1));
         
     InitInstructionsDictionary(Instructions);
 
@@ -141,7 +168,7 @@ int AppProc(app_t* App, void* UserData) {
     rom Rom = ParseRom(RomFile);
     bus Bus = {0};
     Bus.Rom = &Rom;
-    Bus.Ram = (u8*)Ram;
+    Bus.Ram = Ram;
 
     //Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
 
@@ -159,8 +186,8 @@ int AppProc(app_t* App, void* UserData) {
 
     while(app_yield(App) != APP_STATE_EXIT_REQUESTED) {
 
-        PrintDisassembledInstruction(
-            Cpu.PC, MemoryRead(&Bus, Cpu.PC), &Bus, Instructions);
+        // PrintDisassembledInstruction(
+        //     Cpu.PC, MemoryRead(&Bus, Cpu.PC), &Bus, Instructions, CharBuffer);
 
         Pins = m6502_tick(&Cpu, Pins);
         u16 Address = M6502_GET_ADDR(Pins);
@@ -172,9 +199,17 @@ int AppProc(app_t* App, void* UserData) {
             MemoryWrite(&Bus, Address, MemoryValueToWrite);
         }
 
-        PrintToPixelBuffer(&Screen, 1, 1, "The quick brown fox jumps over the lazy dog");
+        PixelBufferClear(&Screen, 0xFF000000);
+        //PrintToPixelBuffer(&Screen, 1, 2, "The quick brown fox jumps over the lazy dog");
+        FormatDisassembledInstruction(Cpu.PC,
+                                      MemoryRead(&Bus, Cpu.PC),
+                                      &Bus,
+                                      Instructions,
+                                      CharBuffer);
+        PrintToPixelBuffer(&Screen, 1, 2, CharBuffer);
+        DrawRam(&Bus, &Screen, 1, 10, CharBuffer);
 
-        app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xffffff, 0x000000);
+        app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xFFFFFF, 0x000000);
     }
     return 0;
 }

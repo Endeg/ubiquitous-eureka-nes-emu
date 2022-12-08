@@ -30,6 +30,7 @@ DumbAllocate(dumb_allocator* Allocator, size_t Size) {
     void* Result = Allocator->MemoryCurrent;
     Allocator->MemoryCurrent += Size;
     Allocator->FreeSpace -= Size;
+    DumpIntExpression(Allocator->FreeSpace);
     return Result;
 }
 

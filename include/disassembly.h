@@ -814,57 +814,73 @@ internal i32 AddressingModeToSize(addressing_mode AddressingMode) {
     }
 }
 
-internal void PrintDisassembledInstruction(u16 Address,
-                                           u8 InstructionOpCode,
-                                           bus* Bus,
-                                           instruction_info* InstructionsDict) {
+internal void
+FormatDisassembledInstruction(u16 Address,
+                              u8 InstructionOpCode,
+                              bus* Bus,
+                              instruction_info* InstructionsDict,
+                              u8* CharBuffer) {
     u8* MnemonicString = MnemonicToString(InstructionsDict[InstructionOpCode].Mnemonic);
 
     switch (InstructionsDict[InstructionOpCode].AddressingMode)
     {
         case Implicit: {
-            PlatformPrint("%04X: (%02X)         %s",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X)         %s\0",
                 Address,
                 InstructionOpCode,
                 MnemonicString);
         } break;
         case Accumulator: {
-            PlatformPrint("%04X: (%02X)         %s A",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X)         %s A\0",
                 Address,
                 InstructionOpCode,
                 MnemonicString);
         } break;
         case Immediate: {
             u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-            PlatformPrint("%04X: (%02X, %02X)     %s #$%02X",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X)     %s #$%02X\0",
                 Address,
                 InstructionOpCode, ArgumentValue,
                 MnemonicString, ArgumentValue);
         } break;
         case ZeroPage: {
             u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-            PlatformPrint("%04X: (%02X, %02X)     %s $%02X",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X)     %s $%02X\0",
                 Address,
                 InstructionOpCode, ArgumentValue,
                 MnemonicString, ArgumentValue);
         } break;
         case ZeroPageX: {
             u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-            PlatformPrint("%04X: (%02X, %02X)     %s $%02X,X",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X)     %s $%02X,X\0",
                 Address,
                 InstructionOpCode, ArgumentValue,
                 MnemonicString, ArgumentValue);
         } break;
         case ZeroPageY: {
             u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-            PlatformPrint("%04X: (%02X, %02X)     %s $%02X,Y",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X)     %s $%02X,Y\0",
                 Address,
                 InstructionOpCode, ArgumentValue,
                 MnemonicString, ArgumentValue);
         } break;
         case Relative: {
             u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-            PlatformPrint("%04X: (%02X, %02X)     %s *%d",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X)     %s *%d\0",
                 Address,
                 InstructionOpCode, ArgumentValue,
                 MnemonicString, (i8)ArgumentValue);
@@ -872,7 +888,9 @@ internal void PrintDisassembledInstruction(u16 Address,
         case Absolute: {
             u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
             u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
-            PlatformPrint("%04X: (%02X, %02X, %02X) %s $%02X%02X",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X, %02X) %s $%02X%02X\0",
                 Address,
                 InstructionOpCode, ArgumentValue1, ArgumentValue2,
                 MnemonicString, ArgumentValue2, ArgumentValue1);
@@ -880,7 +898,9 @@ internal void PrintDisassembledInstruction(u16 Address,
         case AbsoluteX: {
             u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
             u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
-            PlatformPrint("%04X: (%02X, %02X, %02X) %s $%02X%02X,X",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X, %02X) %s $%02X%02X,X\0",
                 Address,
                 InstructionOpCode, ArgumentValue1, ArgumentValue2,
                 MnemonicString, ArgumentValue2, ArgumentValue1);
@@ -888,7 +908,9 @@ internal void PrintDisassembledInstruction(u16 Address,
         case AbsoluteY: {
             u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
             u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
-            PlatformPrint("%04X: (%02X, %02X, %02X) %s $%02X%02X,Y",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X, %02X) %s $%02X%02X,Y\0",
                 Address,
                 InstructionOpCode, ArgumentValue1, ArgumentValue2,
                 MnemonicString, ArgumentValue2, ArgumentValue1);
@@ -896,26 +918,45 @@ internal void PrintDisassembledInstruction(u16 Address,
         case Indirect: {
             u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
             u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
-            PlatformPrint("%04X: (%02X, %02X, %02X) %s $(%02X%02X)",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X, %02X) %s $(%02X%02X)\0",
                 Address,
                 InstructionOpCode, ArgumentValue1, ArgumentValue2,
                 MnemonicString, ArgumentValue2, ArgumentValue1);
         } break;
         case IndirectX: {
             u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-            PlatformPrint("%04X: (%02X, %02X)     %s ($%02X,X)",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X)     %s ($%02X,X)\0",
                 Address,
                 InstructionOpCode, ArgumentValue,
                 MnemonicString, ArgumentValue);
         } break;
         case IndirectY: {
             u8 ArgumentValue = MemoryRead(Bus, Address + 1);
-            PlatformPrint("%04X: (%02X, %02X)     %s ($%02X),Y",
+            sprintf(
+                CharBuffer,
+                "%04X: (%02X, %02X)     %s ($%02X),Y\0",
                 Address,
                 InstructionOpCode, ArgumentValue,
                 MnemonicString, ArgumentValue);
         } break;
     }
+}
+
+internal void PrintDisassembledInstruction(u16 Address,
+                                           u8 InstructionOpCode,
+                                           bus* Bus,
+                                           instruction_info* InstructionsDict,
+                                           u8* CharBuffer) {
+    FormatDisassembledInstruction(Address,
+                                  InstructionOpCode,
+                                  Bus,
+                                  InstructionsDict,
+                                  CharBuffer);
+    PlatformPrint(CharBuffer);
 }
 
 internal void
@@ -924,8 +965,8 @@ Dissasemble(bus* Bus, instruction_info* InstructionsDict, u8** DisassemblyDict, 
 
     do {
         u8 InstructionOpCode = MemoryRead(Bus, Address);
-        PrintDisassembledInstruction(
-            Address, InstructionOpCode, Bus, InstructionsDict);
+        // PrintDisassembledInstruction(
+        //     Address, InstructionOpCode, Bus, InstructionsDict);
 
         i32 InstructionSize = AddressingModeToSize(
             InstructionsDict[InstructionOpCode].AddressingMode);
