@@ -1,7 +1,8 @@
 #include "base.h"
 
-// #define APP_IMPLEMENTATION
-// #include "app.h"
+#define APP_IMPLEMENTATION
+#define APP_WINDOWS
+#include "app.h"
 
 #define CHIPS_IMPL
 #include "m6502.h"
@@ -42,6 +43,8 @@ typedef struct loaded_file {
 
 #include "bus.h"
 #include "disassembly.h"
+#include "gfx.h"
+#include "system_font.h"
 
 global_variable instruction_info Instructions[0x100] = {0};
 global_variable u8 TempMemory[Megabytes(1)];
@@ -117,9 +120,10 @@ PlatformPrint(char* FormatString, ...) {
     printf("PLATFORM: %s\n", FormatBuffer);
 }
 
-int main(int argc, char** argv) {
-    Unused(argc);
-    Unused(argv);
+#define ScreenWidth (320)
+#define ScreenHeight (240)
+
+int AppProc(app_t* App, void* UserData) {
 
     InitInstructionsDictionary(Instructions);
 
@@ -142,8 +146,20 @@ int main(int argc, char** argv) {
     m6502_t Cpu;
     m6502_desc_t CpuDesc = {0};
     uint64_t Pins = m6502_init(&Cpu, &CpuDesc);
-    for (i32 TickIndex = 0; TickIndex < 2000; TickIndex++) {
-        
+
+
+    u32 Canvas[ScreenWidth * ScreenHeight];
+
+    pixel_buffer Screen = {
+        ScreenWidth,
+        ScreenHeight,
+        Canvas,
+    };
+
+    app_screenmode(App, APP_SCREENMODE_WINDOW);
+
+    while(app_yield(App) != APP_STATE_EXIT_REQUESTED) {
+
         PrintDisassembledInstruction(
             Cpu.PC, MemoryRead(&Bus, Cpu.PC), &Bus, Instructions);
 
@@ -156,7 +172,24 @@ int main(int argc, char** argv) {
             u8 MemoryValueToWrite = M6502_GET_DATA(Pins);
             MemoryWrite(&Bus, Address, MemoryValueToWrite);
         }
-    }
 
+        int x = rand() % ScreenWidth;
+        int y = rand() % ScreenHeight;
+        APP_U32 color = rand() | ( (APP_U32) rand() << 16 );
+        Canvas[x + (y * ScreenHeight)] = color;
+
+        PutChar(&Screen, 1, 2, 'a');
+        PutChar(&Screen, 2, 2, 'b');
+        PutChar(&Screen, 1, 1, 'c');
+
+        app_present(App, Canvas, ScreenWidth, ScreenHeight, 0xffffff, 0x000000);
+    }
     return 0;
+}
+
+int main(int argc, char** argv) {
+    Unused(argc);
+    Unused(argv);
+
+    return app_run(AppProc, NULL, NULL, NULL, NULL);
 }
