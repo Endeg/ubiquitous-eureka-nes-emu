@@ -284,6 +284,16 @@ global_variable u8 KC853[2048] = {
 
 internal void
 PutChar(pixel_buffer* Dest, i32 CellX, i32 CellY, u8 Char) {
+    i32 MaxCellX = (Dest->Width / EmbeddedFontWidth) - 1;
+    i32 MaxCellY = (Dest->Height / EmbeddedFontHeight) - 1;
+
+    if (CellX < 0 ||
+        CellY < 0 ||
+        CellX > MaxCellX ||
+        CellY > MaxCellY) {
+        return;
+    }
+
     u8* CharRow = EmbeddedFont;
 
     CharRow += (EmbeddedFontWidth * Char);
@@ -292,7 +302,6 @@ PutChar(pixel_buffer* Dest, i32 CellX, i32 CellY, u8 Char) {
 
     DestRow += (CellY * EmbeddedFontHeight * Dest->Height);
     DestRow += (CellX * EmbeddedFontWidth);
-
 
     for (i32 CharPixelY = 0; CharPixelY < EmbeddedFontHeight; CharPixelY++) {
         u32* DestPixel = DestRow;

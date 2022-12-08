@@ -120,8 +120,10 @@ PlatformPrint(char* FormatString, ...) {
     printf("PLATFORM: %s\n", FormatBuffer);
 }
 
-#define ScreenWidth (320)
-#define ScreenHeight (240)
+#define ScreenWidth (640)
+#define ScreenHeight (480)
+
+global_variable u32 Canvas[ScreenWidth * ScreenHeight] = {0};
 
 int AppProc(app_t* App, void* UserData) {
 
@@ -146,9 +148,6 @@ int AppProc(app_t* App, void* UserData) {
     m6502_t Cpu;
     m6502_desc_t CpuDesc = {0};
     uint64_t Pins = m6502_init(&Cpu, &CpuDesc);
-
-
-    u32 Canvas[ScreenWidth * ScreenHeight];
 
     pixel_buffer Screen = {
         ScreenWidth,
@@ -178,7 +177,7 @@ int AppProc(app_t* App, void* UserData) {
         APP_U32 color = rand() | ( (APP_U32) rand() << 16 );
         Canvas[x + (y * ScreenHeight)] = color;
 
-        PrintToPixelBuffer(&Screen, 3, 4, "Hello this is test!");
+        PrintToPixelBuffer(&Screen, 1, 1, "The quick brown fox jumps over the lazy dog");
 
         app_present(App, Canvas, ScreenWidth, ScreenHeight, 0xffffff, 0x000000);
     }
