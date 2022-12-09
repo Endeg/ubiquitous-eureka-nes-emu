@@ -10,32 +10,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-typedef enum mirroring {
-    Horizontal,
-    Vertical,
-} mirroring;
-
-typedef struct rom {
-    u8 PrgRomBankCount;
-    u32 MapperId;
-    mirroring Mirroring;
-    bool32 IgnoreMirroring;
-    bool32 HasPrgRam;
-    bool32 HasTrainer;
-    u8* Prg;
-} rom;
-
-typedef struct ppu {
-    u32 cycle;
-    i32 scanline;
-} ppu;
-
-typedef struct bus {
-    rom* Rom;
-    u8* Ram;
-    ppu* Ppu;
-} bus;
-
 typedef struct loaded_file {
     u8* Data;
     size_t Size;
@@ -126,7 +100,8 @@ PlatformPrint(char* FormatString, ...) {
 // global_variable u8 StringData[Megabytes(10)];
 // global_variable u8* DisassemblyDict[0xFFFF];
 
-internal void DrawRam(bus* Bus, pixel_buffer* Buffer, i32 CellX, i32 CellY, u8* CharBuffer) {
+internal void
+DrawRam(bus* Bus, pixel_buffer* Buffer, i32 CellX, i32 CellY, u8* CharBuffer) {
     u16 Address = 0x0000;
     i32 NumberOfColumns = 16;
     for (i32 Row = 0; Row < 16; Row++) {
@@ -152,6 +127,67 @@ internal void DrawRam(bus* Bus, pixel_buffer* Buffer, i32 CellX, i32 CellY, u8* 
     }
 }
 
+internal void
+CpuTick(m6502_t* Cpu, u64* Pins, bus* Bus) {
+    *Pins = m6502_tick(Cpu, *Pins);
+    u16 Address = M6502_GET_ADDR(*Pins);
+    if (*Pins & M6502_RW) {
+        u8 MemoryValue = MemoryRead(Bus, Address);
+        M6502_SET_DATA(*Pins, MemoryValue);
+    } else {
+        u8 MemoryValueToWrite = M6502_GET_DATA(*Pins);
+        MemoryWrite(Bus, Address, MemoryValueToWrite);
+    }
+}
+
+#define PpuCyclePerScanline (341)
+#define PpuScanlineCount (261)
+
+typedef struct ppu_pixel {
+    u32 Color;
+    i32 X;
+    i32 Y;
+} ppu_pixel;
+
+internal ppu_pixel
+PpuGetCurrentPixel(ppu* Ppu) {
+    ppu_pixel Result;
+    Result.Color = 0xFF000000 | (rand() | ((u32)rand() << 16));
+    Result.X = Ppu->Cycle - 1;
+    Result.Y = Ppu->Scanline;
+    return Result;
+}
+
+internal void
+PpuTick(ppu* Ppu) {
+	Ppu->Cycle++;
+	if (Ppu->Cycle >= PpuCyclePerScanline)
+	{
+		Ppu->Cycle = 0;
+		Ppu->Scanline++;
+		if (Ppu->Scanline >= PpuScanlineCount)
+		{
+			Ppu->Scanline = -1;
+			Ppu->FrameComplete = 1;
+		}
+	}
+}
+
+internal void
+GlobalTick(m6502_t* Cpu, u64* Pins, bus* Bus,
+           ppu* Ppu, pixel_buffer* Screen) {
+    ppu_pixel Pixel = PpuGetCurrentPixel(Ppu);
+    PixelBufferPutPixel(Screen, Pixel.X, Pixel.Y, Pixel.Color);
+
+    PpuTick(Ppu);
+
+    if (Bus->TickCount % 3 == 0) {
+        CpuTick(Cpu, Pins, Bus);
+    }
+
+    Bus->TickCount++;
+}
+
 int AppProc(app_t* App, void* UserData) {
     dumb_allocator Allocator = InitDumbAllocator(Megabytes(8));
     void* RomBuffer = DumbAllocate(&Allocator, Kilobytes(128));
@@ -174,6 +210,8 @@ int AppProc(app_t* App, void* UserData) {
     Bus.Rom = &Rom;
     Bus.Ram = Ram;
 
+    ppu Ppu = {0};
+
     //Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
 
     m6502_t Cpu;
@@ -192,37 +230,37 @@ int AppProc(app_t* App, void* UserData) {
         (u32*)DumbAllocate(&Allocator, sizeof(u32) * NesScreenWidth * NesScreenHeight),
     };
 
-    {
-        u32* NesRow = NesScreen.Memory;
-
-        for (i32 NesScreenX = 0; NesScreenX < NesScreen.Height; NesScreenX++) {
-            u32* NesPixel = NesRow;
-            for (i32 NesScreenY = 0; NesScreenY < NesScreen.Width; NesScreenY++) {
-                u32 Color = 0xFF000000 | (rand() | ((u32)rand() << 16));
-                *NesPixel = Color;
-                NesPixel++;
-            }
-
-            NesRow += NesScreen.Width;
-        }
-    }
-
     //app_interpolation(App, APP_INTERPOLATION_NONE);
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
+    bool32 Animate = 1;
+
     while(app_yield(App) != APP_STATE_EXIT_REQUESTED) {
+        bool32 DoOneTick = 0;
+        app_input_t Input = app_input(App);
+        for (i32 InputIndex = 0; InputIndex < Input.count; InputIndex++) {
+            if (Input.events[InputIndex].type == APP_INPUT_KEY_DOWN) {
+                if (Input.events[InputIndex].data.key == APP_KEY_SPACE) {
+                    Animate = !Animate;
+                }
+                if (Input.events[InputIndex].data.key == APP_KEY_S) {
+                    DoOneTick = 1;
+                    PixelBufferClear(&NesScreen, 0xFF000000);
+                }
+            }
+        }
 
-        // PrintDisassembledInstruction(
-        //     Cpu.PC, MemoryRead(&Bus, Cpu.PC), &Bus, Instructions, CharBuffer);
-
-        Pins = m6502_tick(&Cpu, Pins);
-        u16 Address = M6502_GET_ADDR(Pins);
-        if (Pins & M6502_RW) {
-            u8 MemoryValue = MemoryRead(&Bus, Address);
-            M6502_SET_DATA(Pins, MemoryValue);
-        } else {
-            u8 MemoryValueToWrite = M6502_GET_DATA(Pins);
-            MemoryWrite(&Bus, Address, MemoryValueToWrite);
+        if (Animate) {
+            do {
+                GlobalTick(
+                    &Cpu, &Pins, &Bus,
+                    &Ppu, &NesScreen);
+            } while (!Ppu.FrameComplete);
+            Ppu.FrameComplete = 0;
+        } else if (DoOneTick) {
+            GlobalTick(
+                &Cpu, &Pins, &Bus,
+                &Ppu, &NesScreen);
         }
 
         PixelBufferClear(&Screen, 0xFF000000);
@@ -234,7 +272,9 @@ int AppProc(app_t* App, void* UserData) {
                                       CharBuffer);
         PrintToPixelBuffer(&Screen, 1, 2, CharBuffer);
         DrawRam(&Bus, &Screen, 1, 10, CharBuffer);
+
         PixelBufferBlit(&Screen, &NesScreen, 8 * 54, 8 * 1);
+
 
         app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xFFFFFF, 0xCC0000);
     }

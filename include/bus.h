@@ -6,6 +6,34 @@
 #define RamSize (1024 * 2)
 #define PrgBankSize (16384)
 
+typedef enum mirroring {
+    Horizontal,
+    Vertical,
+} mirroring;
+
+typedef struct rom {
+    u8 PrgRomBankCount;
+    u32 MapperId;
+    mirroring Mirroring;
+    bool32 IgnoreMirroring;
+    bool32 HasPrgRam;
+    bool32 HasTrainer;
+    u8* Prg;
+} rom;
+
+typedef struct ppu {
+    u32 Cycle;
+    i32 Scanline;
+    bool32 FrameComplete;
+} ppu;
+
+typedef struct bus {
+    u32 TickCount;
+    rom* Rom;
+    u8* Ram;
+    ppu* Ppu;
+} bus;
+
 internal u8
 MemoryRead(bus* Bus, u16 Address) {
     if (Address >= 0x8000 && Address <= 0xFFFF) {

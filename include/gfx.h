@@ -23,6 +23,15 @@ PixelBufferClear(pixel_buffer* Dest, u32 Color) {
 }
 
 internal void
+PixelBufferPutPixel(pixel_buffer* Screen, i32 X, i32 Y, u32 Color) {
+    if (X < 0 || Y < 0 || X > Screen->Width || Y > Screen->Height) {
+        return;
+    }
+
+    Screen->Memory[X + (Y * Screen->Width)] = Color;
+}
+
+internal void
 PixelBufferBlit(pixel_buffer* Dest, pixel_buffer* Src, i32 X, i32 Y) {
     //TODO: Clip Src to draw part of Pixel buffer
 
