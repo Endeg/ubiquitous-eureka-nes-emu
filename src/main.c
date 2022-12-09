@@ -116,8 +116,9 @@ PlatformPrint(char* FormatString, ...) {
     printf("PLATFORM: %s\n", FormatBuffer);
 }
 
-#define ScreenWidth (1280)
-#define ScreenHeight (720)
+#define ScreenScale (4)
+#define ScreenWidth (1280 / ScreenScale)
+#define ScreenHeight (720 / ScreenScale)
 
 // global_variable u8 StringData[Megabytes(10)];
 // global_variable u8* DisassemblyDict[0xFFFF];
@@ -182,6 +183,19 @@ int AppProc(app_t* App, void* UserData) {
         (u32*)DumbAllocate(&Allocator, sizeof(u32) * ScreenWidth * ScreenHeight),
     };
 
+    u32 OtherPixels[3*4] = {
+        0xFF0000FF, 0xFF000000, 0xFFFF0000,
+        0xFF000000, 0xFF00FF00, 0xFF000000,
+        0xFFFF0000, 0xFF000000, 0xFF0000FF,
+        0xFFFF00FF, 0xFF00FF00, 0xFFFF00FF,
+    };
+
+    pixel_buffer Other = {
+        3,
+        4,
+        OtherPixels,
+    };
+
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
     while(app_yield(App) != APP_STATE_EXIT_REQUESTED) {
@@ -208,6 +222,8 @@ int AppProc(app_t* App, void* UserData) {
                                       CharBuffer);
         PrintToPixelBuffer(&Screen, 1, 2, CharBuffer);
         DrawRam(&Bus, &Screen, 1, 10, CharBuffer);
+
+        PixelBufferBlit(&Screen, &Other, 3, 3);
 
         app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xFFFFFF, 0x000000);
     }

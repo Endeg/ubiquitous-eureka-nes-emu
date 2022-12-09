@@ -22,4 +22,24 @@ PixelBufferClear(pixel_buffer* Dest, u32 Color) {
     }
 }
 
+internal void
+PixelBufferBlit(pixel_buffer* Dest, pixel_buffer* Src, i32 X, i32 Y) {
+    u32* DestRow = Dest->Memory;
+    DestRow += Y * Dest->Width;
+    DestRow += X;
+
+    u32* SrcRow = Src->Memory;
+    for (i32 SrcY = 0; SrcY < Src->Height; SrcY++) {
+        u32* DestPixel = DestRow;
+        u32* SrcPixel = SrcRow;
+        for (i32 SrcX = 0; SrcX < Src->Width; SrcX++) {
+            *DestPixel = *SrcPixel;
+            DestPixel++;
+            SrcPixel++;
+        }
+        DestRow += Dest->Width;
+        SrcRow += Src->Width;
+    }
+}
+
 #endif
