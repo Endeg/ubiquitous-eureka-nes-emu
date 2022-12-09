@@ -234,9 +234,14 @@ int AppProc(app_t* App, void* UserData) {
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
     bool32 Animate = 1;
+    
+    f32 AppTimeFrequency = app_time_freq(App);
 
     while(app_yield(App) != APP_STATE_EXIT_REQUESTED) {
+        u64 AppTimeFrameStart = app_time_count(App);
         bool32 DoOneTick = 0;
+        bool32 DoOneInstruction = 0;
+        bool32 DoOneFrame = 0;
         app_input_t Input = app_input(App);
         for (i32 InputIndex = 0; InputIndex < Input.count; InputIndex++) {
             if (Input.events[InputIndex].type == APP_INPUT_KEY_DOWN) {
@@ -245,7 +250,12 @@ int AppProc(app_t* App, void* UserData) {
                 }
                 if (Input.events[InputIndex].data.key == APP_KEY_S) {
                     DoOneTick = 1;
-                    PixelBufferClear(&NesScreen, 0xFF000000);
+                }
+                if (Input.events[InputIndex].data.key == APP_KEY_I) {
+                    DoOneInstruction = 1;
+                }
+                if (Input.events[InputIndex].data.key == APP_KEY_F) {
+                    DoOneFrame = 1;
                 }
             }
         }
@@ -261,10 +271,23 @@ int AppProc(app_t* App, void* UserData) {
             GlobalTick(
                 &Cpu, &Pins, &Bus,
                 &Ppu, &NesScreen);
+        } else if (DoOneInstruction) {
+            u16 SavedPC = Cpu.PC;
+            do {
+                GlobalTick(
+                    &Cpu, &Pins, &Bus,
+                    &Ppu, &NesScreen);
+            } while (Cpu.PC == SavedPC);
+        } else if (DoOneFrame) {
+            do {
+                GlobalTick(
+                    &Cpu, &Pins, &Bus,
+                    &Ppu, &NesScreen);
+            } while (!Ppu.FrameComplete);
+            Ppu.FrameComplete = 0;
         }
 
         PixelBufferClear(&Screen, 0xFF000000);
-        //PrintToPixelBuffer(&Screen, 1, 2, "The quick brown fox jumps over the lazy dog");
         FormatDisassembledInstruction(Cpu.PC,
                                       MemoryRead(&Bus, Cpu.PC),
                                       &Bus,
@@ -275,8 +298,10 @@ int AppProc(app_t* App, void* UserData) {
 
         PixelBufferBlit(&Screen, &NesScreen, 8 * 54, 8 * 1);
 
-
         app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xFFFFFF, 0xCC0000);
+        u64 AppTimeFrameEnd = app_time_count(App);
+        f32 FrameDelta = (f32)(AppTimeFrameEnd - AppTimeFrameStart) / AppTimeFrequency;
+        //DumpFloatExpression(FrameDelta);
     }
     return 0;
 }
