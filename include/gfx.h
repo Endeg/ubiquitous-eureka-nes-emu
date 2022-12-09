@@ -24,21 +24,51 @@ PixelBufferClear(pixel_buffer* Dest, u32 Color) {
 
 internal void
 PixelBufferBlit(pixel_buffer* Dest, pixel_buffer* Src, i32 X, i32 Y) {
+    //TODO: Clip Src to draw part of Pixel buffer
+
+    i32 SrcLeft = 0;
+    i32 SrcTop = 0;
+    i32 SrcRight = SrcLeft + Src->Width;
+    i32 SrcBottom = SrcTop + Src->Height;
+
+    if (X < 0) {
+        //SrcLeft -= X;
+        return;
+    }
+
+    if (X > (Dest->Width - Src->Width)) {
+        return;
+    }
+
+    if (Y > (Dest->Height - Src->Height)) {
+        return;
+    }
+
+    if (Y < 0) {
+        //SrcTop -= Y;
+        return;
+    }
+
+    i32 SrcPitch = SrcRight - SrcLeft;
+
     u32* DestRow = Dest->Memory;
     DestRow += Y * Dest->Width;
     DestRow += X;
 
     u32* SrcRow = Src->Memory;
-    for (i32 SrcY = 0; SrcY < Src->Height; SrcY++) {
+    SrcRow += SrcTop * Src->Width;
+    SrcRow += SrcLeft;
+
+    for (i32 SrcY = SrcTop; SrcY < SrcBottom; SrcY++) {
         u32* DestPixel = DestRow;
         u32* SrcPixel = SrcRow;
-        for (i32 SrcX = 0; SrcX < Src->Width; SrcX++) {
+        for (i32 SrcX = SrcLeft; SrcX < SrcRight; SrcX++) {
             *DestPixel = *SrcPixel;
             DestPixel++;
             SrcPixel++;
         }
         DestRow += Dest->Width;
-        SrcRow += Src->Width;
+        SrcRow += SrcPitch;
     }
 }
 

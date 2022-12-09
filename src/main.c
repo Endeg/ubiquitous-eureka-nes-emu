@@ -116,9 +116,12 @@ PlatformPrint(char* FormatString, ...) {
     printf("PLATFORM: %s\n", FormatBuffer);
 }
 
-#define ScreenScale (4)
+#define ScreenScale (1)
 #define ScreenWidth (1280 / ScreenScale)
 #define ScreenHeight (720 / ScreenScale)
+
+#define NesScreenWidth (256)
+#define NesScreenHeight (240)
 
 // global_variable u8 StringData[Megabytes(10)];
 // global_variable u8* DisassemblyDict[0xFFFF];
@@ -183,19 +186,28 @@ int AppProc(app_t* App, void* UserData) {
         (u32*)DumbAllocate(&Allocator, sizeof(u32) * ScreenWidth * ScreenHeight),
     };
 
-    u32 OtherPixels[3*4] = {
-        0xFF0000FF, 0xFF000000, 0xFFFF0000,
-        0xFF000000, 0xFF00FF00, 0xFF000000,
-        0xFFFF0000, 0xFF000000, 0xFF0000FF,
-        0xFFFF00FF, 0xFF00FF00, 0xFFFF00FF,
+    pixel_buffer NesScreen = {
+        NesScreenWidth,
+        NesScreenHeight,
+        (u32*)DumbAllocate(&Allocator, sizeof(u32) * NesScreenWidth * NesScreenHeight),
     };
 
-    pixel_buffer Other = {
-        3,
-        4,
-        OtherPixels,
-    };
+    {
+        u32* NesRow = NesScreen.Memory;
 
+        for (i32 NesScreenX = 0; NesScreenX < NesScreen.Height; NesScreenX++) {
+            u32* NesPixel = NesRow;
+            for (i32 NesScreenY = 0; NesScreenY < NesScreen.Width; NesScreenY++) {
+                u32 Color = 0xFF000000 | (rand() | ((u32)rand() << 16));
+                *NesPixel = Color;
+                NesPixel++;
+            }
+
+            NesRow += NesScreen.Width;
+        }
+    }
+
+    //app_interpolation(App, APP_INTERPOLATION_NONE);
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
     while(app_yield(App) != APP_STATE_EXIT_REQUESTED) {
@@ -222,10 +234,9 @@ int AppProc(app_t* App, void* UserData) {
                                       CharBuffer);
         PrintToPixelBuffer(&Screen, 1, 2, CharBuffer);
         DrawRam(&Bus, &Screen, 1, 10, CharBuffer);
+        PixelBufferBlit(&Screen, &NesScreen, 8 * 54, 8 * 1);
 
-        PixelBufferBlit(&Screen, &Other, 3, 3);
-
-        app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xFFFFFF, 0x000000);
+        app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xFFFFFF, 0xCC0000);
     }
     return 0;
 }
