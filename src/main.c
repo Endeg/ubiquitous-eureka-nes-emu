@@ -27,20 +27,20 @@ internal loaded_file
 LoadFile(char* FileName, void* DestinationMemory) {
     FILE* File = fopen(FileName, "rb");
     Assert(File);
-    
+
     i32 CurrentByte;
-    
+
     loaded_file Result;
-    
+
     Result.Data = (u8*)DestinationMemory;
     Result.Size = 0;
-    
+
     while ((CurrentByte = fgetc(File)) != EOF) {
         Result.Data[Result.Size++] = (u8)CurrentByte;
     }
-    
+
     fclose(File);
-    
+
     return Result;
 }
 
@@ -60,23 +60,23 @@ LoadFile(char* FileName, void* DestinationMemory) {
 
 internal rom ParseRom(loaded_file LoadedFile) {
     rom Result = {0};
-    
+
     Result.PrgRomBankCount = LoadedFile.Data[INesPrgBanksCount];
     Result.MapperId = (LoadedFile.Data[INesFlags7] & INesFlags7MapperIdHigh) | ((LoadedFile.Data[INesFlags6] & INesFlags6MapperIdLow) >> 4);
     Result.Mirroring = (LoadedFile.Data[INesFlags6] & INesFlags6Mirroring) ? Vertical : Horizontal;
     Result.IgnoreMirroring = LoadedFile.Data[INesFlags6] & INesFlags6IgnoreMirroring;
     Result.HasPrgRam = LoadedFile.Data[INesFlags6] & INesFlags6PrgRam;
     Result.HasTrainer = LoadedFile.Data[INesFlags6] & INesFlags6Trainer;
-    
+
     u8* PrgSectionStart =
         LoadedFile.Data +
         INesHeaderSize + ((Result.HasTrainer) ? INesTrainerSize : 0);
-    
+
     Result.Prg = PrgSectionStart;
-    
+
     Assert(!Result.HasPrgRam);
-    Assert(Result.MapperId == MapperNROM);    
-    
+    Assert(Result.MapperId == MapperNROM);
+
     return Result;
 }
 
