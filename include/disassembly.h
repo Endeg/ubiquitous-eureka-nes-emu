@@ -3,6 +3,8 @@
 
 #include "base.h"
 
+#include <string.h>
+
 typedef enum addressing_mode {
     Implicit,
     Immediate,
@@ -960,13 +962,26 @@ internal void PrintDisassembledInstruction(u16 Address,
 }
 
 internal void
-Dissasemble(bus* Bus, instruction_info* InstructionsDict, u8** DisassemblyDict, u8* StringData) {
+Dissasemble(bus* Bus,
+            instruction_info* InstructionsDict,
+            u8** DisassemledInstructions,
+            u8* DissasemblyStringData) {
     u32 Address = 0x0000;
+
+    u8* StringData = DissasemblyStringData;
 
     do {
         u8 InstructionOpCode = MemoryRead(Bus, Address);
-        // PrintDisassembledInstruction(
-        //     Address, InstructionOpCode, Bus, InstructionsDict);
+
+        FormatDisassembledInstruction((u16)Address,
+                                      InstructionOpCode,
+                                      Bus,
+                                      InstructionsDict,
+                                      StringData);
+
+        DisassemledInstructions[Address] = StringData;
+        StringData += strlen(StringData);
+        StringData += 1;
 
         i32 InstructionSize = AddressingModeToSize(
             InstructionsDict[InstructionOpCode].AddressingMode);
