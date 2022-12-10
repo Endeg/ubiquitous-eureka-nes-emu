@@ -1,5 +1,12 @@
 #include "base.h"
 
+#include "bus.h"
+#include "disassembly.h"
+#include "gfx.h"
+#include "system_font.h"
+#include "dumb_allocator.h"
+#include "file_io.h"
+
 #define APP_IMPLEMENTATION
 #define APP_WINDOWS
 #include "app.h"
@@ -10,39 +17,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-typedef struct loaded_file {
-    u8* Data;
-    size_t Size;
-} loaded_file;
-
-#include "bus.h"
-#include "disassembly.h"
-#include "gfx.h"
-#include "system_font.h"
-#include "dumb_allocator.h"
-
 #define RomPath ("Super Mario Bros. (JU) [!].nes")
-
-internal loaded_file
-LoadFile(char* FileName, void* DestinationMemory) {
-    FILE* File = fopen(FileName, "rb");
-    Assert(File);
-
-    i32 CurrentByte;
-
-    loaded_file Result;
-
-    Result.Data = (u8*)DestinationMemory;
-    Result.Size = 0;
-
-    while ((CurrentByte = fgetc(File)) != EOF) {
-        Result.Data[Result.Size++] = (u8)CurrentByte;
-    }
-
-    fclose(File);
-
-    return Result;
-}
 
 #define INesHeaderSize (16)
 #define INesTrainerSize (512)

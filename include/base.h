@@ -1,5 +1,5 @@
-#ifndef BASE_H
-#define BASE_H
+#ifndef _COMMON_BASE_H
+#define _COMMON_BASE_H
 
 /*
 
@@ -15,7 +15,7 @@
 #define local_persist static
 #define global_variable static
 
-#include <stdint.h> 
+#include <stdint.h>
 
 typedef uint8_t u8;
 typedef uint16_t u16;

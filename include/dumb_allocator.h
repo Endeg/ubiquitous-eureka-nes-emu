@@ -1,5 +1,5 @@
-#ifndef DUMB_ALLOCATOR
-#define DUMB_ALLOCATOR
+#ifndef _COMMON_DUMB_ALLOCATOR_H
+#define _COMMON_DUMB_ALLOCATOR_H
 
 #include "base.h"
 #include <stdlib.h>

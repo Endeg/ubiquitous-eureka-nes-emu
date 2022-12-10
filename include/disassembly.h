@@ -1,5 +1,5 @@
-#ifndef DISASSEMBLY_H
-#define DISASSEMBLY_H
+#ifndef _EMU_DISASSEMBLY_H
+#define _EMU_DISASSEMBLY_H
 
 #include "base.h"
 

@@ -1,5 +1,5 @@
-#ifndef SYSTEM_FONT_H
-#define SYSTEM_FONT_H
+#ifndef _EMU_SYSTEM_FONT_H
+#define _EMU_SYSTEM_FONT_H
 
 #include "base.h"
 #include "gfx.h"

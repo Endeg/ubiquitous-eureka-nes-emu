@@ -1,5 +1,5 @@
-#ifndef GFX_H
-#define GFX_H
+#ifndef _EMU_GFX_H
+#define _EMU_GFX_H
 
 #include "base.h"
 

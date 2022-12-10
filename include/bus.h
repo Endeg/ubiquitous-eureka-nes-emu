@@ -1,5 +1,5 @@
-#ifndef BUS_H
-#define BUS_H
+#ifndef _EMU_BUS_H
+#define _EMU_BUS_H
 
 #define MapperNROM (0)
 
@@ -40,7 +40,7 @@ MemoryRead(bus* Bus, u16 Address) {
         //TODO: NROM memory mapping need fixing, Mario starts at $0000 instead of $8000
         //Mapper space
         Assert(Bus->Rom->MapperId == MapperNROM);
-        
+
         u16 BaseAddress = Address - 0x8000;
 
         if (Bus->Rom->PrgRomBankCount == 2) {
