@@ -88,77 +88,6 @@ GlobalTick(m6502_t* Cpu, u64* Pins, bus* Bus,
     Bus->TickCount++;
 }
 
-#define AroundInstructionCount (3)
-
-internal u16
-FindValidAddress(u16 Address, u8** DisassemledInstructions) {
-    u16 ValidAddress = Address;
-    while (!DisassemledInstructions[ValidAddress]) {
-        ValidAddress--;
-    }
-    return ValidAddress;
-}
-
-internal u16
-FindNextAddress(u16 Address, u8** DisassemledInstructions) {
-    u16 ValidAddress = Address + 1;
-    while (!DisassemledInstructions[ValidAddress]) {
-        ValidAddress++;
-    }
-    return ValidAddress;
-}
-
-internal u16
-FindPreviousAddress(u16 Address, u8** DisassemledInstructions) {
-    u16 ValidAddress = Address - 1;
-    while (!DisassemledInstructions[ValidAddress]) {
-        ValidAddress--;
-    }
-    return ValidAddress;
-}
-
-internal u16
-StepBackToInstruction(u16 Address, u8** DisassemledInstructions, i32 Steps) {
-    u16 SteppedBackAddress = Address;
-    for (i32 I = 0; I < Steps; I++) {
-        SteppedBackAddress = FindPreviousAddress(SteppedBackAddress, DisassemledInstructions);
-    }
-    return SteppedBackAddress;
-}
-
-internal void
-DrawCode(pixel_buffer* Dest,
-         i32 CellX, i32 CellY,
-         u16 Address, bus* Bus,
-         u8** DisassemledInstructions) {
-    Assert(FindPreviousAddress(0x8004, DisassemledInstructions) == 0x8002);
-    Assert(FindPreviousAddress(0x8002, DisassemledInstructions) == 0x8001);
-    Assert(FindPreviousAddress(0x8001, DisassemledInstructions) == 0x8000);
-
-    Assert(StepBackToInstruction(0x8004, DisassemledInstructions, 3) == 0x8000);
-
-    u16 ExecutingAddress = FindValidAddress(Address, DisassemledInstructions);
-    u16 StartAddress = StepBackToInstruction(ExecutingAddress, DisassemledInstructions, AroundInstructionCount);
-
-    // DumpU16HexExpression(ExecutingAddress);
-    // DumpU16HexExpression(StartAddress);
-
-    u16 CurrentAddress = StartAddress;
-    i32 NumberOfInstructionsToPrint = (AroundInstructionCount * 2) + 1;
-    i32 CellYOffset = 0;
-    while (NumberOfInstructionsToPrint) {
-        if (DisassemledInstructions[CurrentAddress]) {
-            if (CurrentAddress == ExecutingAddress) {
-                PutChar(Dest, CellX, CellY + CellYOffset, '>');
-            }
-            PrintToPixelBuffer(Dest, CellX + 1, CellY + CellYOffset, DisassemledInstructions[CurrentAddress]);
-            NumberOfInstructionsToPrint--;
-            CellYOffset++;
-            CurrentAddress = FindNextAddress(CurrentAddress, DisassemledInstructions);
-        }
-    }
-}
-
 int AppProc(app_t* App, void* UserData) {
     dumb_allocator Allocator = InitDumbAllocator(Megabytes(8));
     void* RomBuffer = DumbAllocate(&Allocator, Kilobytes(128));
@@ -184,9 +113,6 @@ int AppProc(app_t* App, void* UserData) {
     Bus.Ram = Ram;
 
     ppu Ppu = PpuInit();
-
-    // global_variable u8 StringData[Megabytes(10)];
-    // global_variable u8* DisassemblyDict[0xFFFF];
 
     Dissasemble(&Bus,
                 Instructions,

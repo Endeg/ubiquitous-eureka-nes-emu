@@ -2,6 +2,8 @@
 #define _EMU_DISASSEMBLY_H
 
 #include "base.h"
+#include "gfx.h"
+#include "system_font.h"
 
 #include <string.h>
 
@@ -987,6 +989,74 @@ Dissasemble(bus* Bus,
             InstructionsDict[InstructionOpCode].AddressingMode);
         Address += InstructionSize;
     } while (Address <= 0xFFFF);
+}
+
+internal u16
+FindValidAddress(u16 Address, u8** DisassemledInstructions) {
+    u16 ValidAddress = Address;
+    while (!DisassemledInstructions[ValidAddress]) {
+        ValidAddress--;
+    }
+    return ValidAddress;
+}
+
+internal u16
+FindNextAddress(u16 Address, u8** DisassemledInstructions) {
+    u16 ValidAddress = Address + 1;
+    while (!DisassemledInstructions[ValidAddress]) {
+        ValidAddress++;
+    }
+    return ValidAddress;
+}
+
+internal u16
+FindPreviousAddress(u16 Address, u8** DisassemledInstructions) {
+    u16 ValidAddress = Address - 1;
+    while (!DisassemledInstructions[ValidAddress]) {
+        ValidAddress--;
+    }
+    return ValidAddress;
+}
+
+internal u16
+StepBackToInstruction(u16 Address, u8** DisassemledInstructions, i32 Steps) {
+    u16 SteppedBackAddress = Address;
+    for (i32 I = 0; I < Steps; I++) {
+        SteppedBackAddress = FindPreviousAddress(SteppedBackAddress, DisassemledInstructions);
+    }
+    return SteppedBackAddress;
+}
+
+#define AroundInstructionCount (3)
+
+internal void
+DrawCode(pixel_buffer* Dest,
+         i32 CellX, i32 CellY,
+         u16 Address, bus* Bus,
+         u8** DisassemledInstructions) {
+    // NOTE: This assertions work on SMB
+    // Assert(FindPreviousAddress(0x8004, DisassemledInstructions) == 0x8002);
+    // Assert(FindPreviousAddress(0x8002, DisassemledInstructions) == 0x8001);
+    // Assert(FindPreviousAddress(0x8001, DisassemledInstructions) == 0x8000);
+    // Assert(StepBackToInstruction(0x8004, DisassemledInstructions, 3) == 0x8000);
+
+    u16 ExecutingAddress = FindValidAddress(Address, DisassemledInstructions);
+    u16 StartAddress = StepBackToInstruction(ExecutingAddress, DisassemledInstructions, AroundInstructionCount);
+
+    u16 CurrentAddress = StartAddress;
+    i32 NumberOfInstructionsToPrint = (AroundInstructionCount * 2) + 1;
+    i32 CellYOffset = 0;
+    while (NumberOfInstructionsToPrint) {
+        if (DisassemledInstructions[CurrentAddress]) {
+            if (CurrentAddress == ExecutingAddress) {
+                PutChar(Dest, CellX, CellY + CellYOffset, '>');
+            }
+            PrintToPixelBuffer(Dest, CellX + 1, CellY + CellYOffset, DisassemledInstructions[CurrentAddress]);
+            NumberOfInstructionsToPrint--;
+            CellYOffset++;
+            CurrentAddress = FindNextAddress(CurrentAddress, DisassemledInstructions);
+        }
+    }
 }
 
 #endif
