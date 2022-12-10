@@ -1,6 +1,7 @@
 #include "base.h"
 
 #include "bus.h"
+#include "rom.h"
 #include "disassembly.h"
 #include "gfx.h"
 #include "system_font.h"
@@ -18,42 +19,6 @@
 #include <stdarg.h>
 
 #define RomPath ("Super Mario Bros. (JU) [!].nes")
-
-#define INesHeaderSize (16)
-#define INesTrainerSize (512)
-#define INesPrgBanksCount (4)
-#define INesFlags6 (6)
-#define INesFlags7 (7)
-
-#define INesFlags6Mirroring       (0b00000001)
-#define INesFlags6PrgRam          (0b00000010)
-#define INesFlags6Trainer         (0b00000100)
-#define INesFlags6IgnoreMirroring (0b00001000)
-#define INesFlags6MapperIdLow     (0b11110000)
-
-#define INesFlags7MapperIdHigh    (0b11110000)
-
-internal rom ParseRom(loaded_file LoadedFile) {
-    rom Result = {0};
-
-    Result.PrgRomBankCount = LoadedFile.Data[INesPrgBanksCount];
-    Result.MapperId = (LoadedFile.Data[INesFlags7] & INesFlags7MapperIdHigh) | ((LoadedFile.Data[INesFlags6] & INesFlags6MapperIdLow) >> 4);
-    Result.Mirroring = (LoadedFile.Data[INesFlags6] & INesFlags6Mirroring) ? Vertical : Horizontal;
-    Result.IgnoreMirroring = LoadedFile.Data[INesFlags6] & INesFlags6IgnoreMirroring;
-    Result.HasPrgRam = LoadedFile.Data[INesFlags6] & INesFlags6PrgRam;
-    Result.HasTrainer = LoadedFile.Data[INesFlags6] & INesFlags6Trainer;
-
-    u8* PrgSectionStart =
-        LoadedFile.Data +
-        INesHeaderSize + ((Result.HasTrainer) ? INesTrainerSize : 0);
-
-    Result.Prg = PrgSectionStart;
-
-    Assert(!Result.HasPrgRam);
-    Assert(Result.MapperId == MapperNROM);
-
-    return Result;
-}
 
 void
 PlatformPrint(char* FormatString, ...) {
@@ -268,7 +233,7 @@ int AppProc(app_t* App, void* UserData) {
 
         PixelBufferBlit(&Screen, &NesScreen, 8 * 54, 8 * 1);
 
-        app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xFFFFFF, 0xCC0000);
+        app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xFFFFFF, 0x220000);
         u64 AppTimeFrameEnd = app_time_count(App);
         f32 FrameDelta = (f32)(AppTimeFrameEnd - AppTimeFrameStart) / AppTimeFrequency;
         //DumpFloatExpression(FrameDelta);

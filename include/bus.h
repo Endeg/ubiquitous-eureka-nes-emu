@@ -1,25 +1,7 @@
 #ifndef _EMU_BUS_H
 #define _EMU_BUS_H
 
-#define MapperNROM (0)
-
-#define RamSize (1024 * 2)
-#define PrgBankSize (16384)
-
-typedef enum mirroring {
-    Horizontal,
-    Vertical,
-} mirroring;
-
-typedef struct rom {
-    u8 PrgRomBankCount;
-    u32 MapperId;
-    mirroring Mirroring;
-    bool32 IgnoreMirroring;
-    bool32 HasPrgRam;
-    bool32 HasTrainer;
-    u8* Prg;
-} rom;
+#include "rom.h"
 
 typedef struct ppu {
     u32 Cycle;
