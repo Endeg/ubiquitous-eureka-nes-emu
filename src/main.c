@@ -27,20 +27,20 @@ internal loaded_file
 LoadFile(char* FileName, void* DestinationMemory) {
     FILE* File = fopen(FileName, "rb");
     Assert(File);
-
+    
     i32 CurrentByte;
-
+    
     loaded_file Result;
-
+    
     Result.Data = (u8*)DestinationMemory;
     Result.Size = 0;
-
+    
     while ((CurrentByte = fgetc(File)) != EOF) {
         Result.Data[Result.Size++] = (u8)CurrentByte;
     }
-
+    
     fclose(File);
-
+    
     return Result;
 }
 
@@ -60,23 +60,23 @@ LoadFile(char* FileName, void* DestinationMemory) {
 
 internal rom ParseRom(loaded_file LoadedFile) {
     rom Result = {0};
-
+    
     Result.PrgRomBankCount = LoadedFile.Data[INesPrgBanksCount];
     Result.MapperId = (LoadedFile.Data[INesFlags7] & INesFlags7MapperIdHigh) | ((LoadedFile.Data[INesFlags6] & INesFlags6MapperIdLow) >> 4);
     Result.Mirroring = (LoadedFile.Data[INesFlags6] & INesFlags6Mirroring) ? Vertical : Horizontal;
     Result.IgnoreMirroring = LoadedFile.Data[INesFlags6] & INesFlags6IgnoreMirroring;
     Result.HasPrgRam = LoadedFile.Data[INesFlags6] & INesFlags6PrgRam;
     Result.HasTrainer = LoadedFile.Data[INesFlags6] & INesFlags6Trainer;
-
-    u8* PrgSectionStart = LoadedFile.Data +
-                          INesHeaderSize +
-                          ((Result.HasTrainer) ? INesTrainerSize : 0);
-
+    
+    u8* PrgSectionStart =
+        LoadedFile.Data +
+        INesHeaderSize + ((Result.HasTrainer) ? INesTrainerSize : 0);
+    
     Result.Prg = PrgSectionStart;
-
+    
     Assert(!Result.HasPrgRam);
     Assert(Result.MapperId == MapperNROM);    
-
+    
     return Result;
 }
 
@@ -111,16 +111,15 @@ DrawRam(bus* Bus, pixel_buffer* Buffer, i32 CellX, i32 CellY, u8* CharBuffer) {
                            CellY + Row,
                            CharBuffer);
 
-
         for (i32 Column = 0; Column < NumberOfColumns; Column++) {
             u8 MemoryValue = MemoryRead(Bus, Address);
 
             sprintf(CharBuffer, "%02X\0", MemoryValue);
 
             PrintToPixelBuffer(Buffer,
-                    CellX + (Column * 3) + 5,
-                    CellY + Row,
-                    CharBuffer);
+                               CellX + (Column * 3) + 5,
+                               CellY + Row,
+                               CharBuffer);
 
             Address++;
         }
@@ -193,7 +192,7 @@ int AppProc(app_t* App, void* UserData) {
     void* RomBuffer = DumbAllocate(&Allocator, Kilobytes(128));
     instruction_info* Instructions = DumbAllocate(&Allocator, sizeof(instruction_info) * 0x100);
     u8* CharBuffer = DumbAllocate(&Allocator, Kilobytes(1));
-        
+
     InitInstructionsDictionary(Instructions);
 
     loaded_file RomFile = LoadFile(RomPath, RomBuffer);
@@ -234,7 +233,7 @@ int AppProc(app_t* App, void* UserData) {
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
     bool32 Animate = 1;
-    
+
     f32 AppTimeFrequency = app_time_freq(App);
 
     while(app_yield(App) != APP_STATE_EXIT_REQUESTED) {
@@ -262,27 +261,23 @@ int AppProc(app_t* App, void* UserData) {
 
         if (Animate) {
             do {
-                GlobalTick(
-                    &Cpu, &Pins, &Bus,
-                    &Ppu, &NesScreen);
+                GlobalTick(&Cpu, &Pins, &Bus,
+                           &Ppu, &NesScreen);
             } while (!Ppu.FrameComplete);
             Ppu.FrameComplete = 0;
         } else if (DoOneTick) {
-            GlobalTick(
-                &Cpu, &Pins, &Bus,
-                &Ppu, &NesScreen);
+            GlobalTick(&Cpu, &Pins, &Bus,
+                       &Ppu, &NesScreen);
         } else if (DoOneInstruction) {
             u16 SavedPC = Cpu.PC;
             do {
-                GlobalTick(
-                    &Cpu, &Pins, &Bus,
-                    &Ppu, &NesScreen);
+                GlobalTick(&Cpu, &Pins, &Bus,
+                           &Ppu, &NesScreen);
             } while (Cpu.PC == SavedPC);
         } else if (DoOneFrame) {
             do {
-                GlobalTick(
-                    &Cpu, &Pins, &Bus,
-                    &Ppu, &NesScreen);
+                GlobalTick(&Cpu, &Pins, &Bus,
+                           &Ppu, &NesScreen);
             } while (!Ppu.FrameComplete);
             Ppu.FrameComplete = 0;
         }
