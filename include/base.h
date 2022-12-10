@@ -75,15 +75,4 @@ PlatformPrint(char* message, ...);
 #define Halt(Message)
 #endif
 
-typedef struct storage {
-    u64 StorageSize;
-    void* Storage;
-} storage;
-
-typedef struct game_memory {
-    bool32 IsInitialized;
-    storage Permanent;
-    storage Transient;
-} game_memory;
-
 #endif
