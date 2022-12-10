@@ -34,9 +34,6 @@ PlatformPrint(char* FormatString, ...) {
 #define ScreenWidth (1280 / ScreenScale)
 #define ScreenHeight (720 / ScreenScale)
 
-#define NesScreenWidth (256)
-#define NesScreenHeight (240)
-
 // global_variable u8 StringData[Megabytes(10)];
 // global_variable u8* DisassemblyDict[0xFFFF];
 
@@ -79,39 +76,6 @@ CpuTick(m6502_t* Cpu, u64* Pins, bus* Bus) {
     }
 }
 
-#define PpuCyclePerScanline (341)
-#define PpuScanlineCount (261)
-
-typedef struct ppu_pixel {
-    u32 Color;
-    i32 X;
-    i32 Y;
-} ppu_pixel;
-
-internal ppu_pixel
-PpuGetCurrentPixel(ppu* Ppu) {
-    ppu_pixel Result;
-    Result.Color = 0xFF000000 | (rand() | ((u32)rand() << 16));
-    Result.X = Ppu->Cycle - 1;
-    Result.Y = Ppu->Scanline;
-    return Result;
-}
-
-internal void
-PpuTick(ppu* Ppu) {
-	Ppu->Cycle++;
-	if (Ppu->Cycle >= PpuCyclePerScanline)
-	{
-		Ppu->Cycle = 0;
-		Ppu->Scanline++;
-		if (Ppu->Scanline >= PpuScanlineCount)
-		{
-			Ppu->Scanline = -1;
-			Ppu->FrameComplete = 1;
-		}
-	}
-}
-
 internal void
 GlobalTick(m6502_t* Cpu, u64* Pins, bus* Bus,
            ppu* Ppu, pixel_buffer* Screen) {
@@ -149,7 +113,7 @@ int AppProc(app_t* App, void* UserData) {
     Bus.Rom = &Rom;
     Bus.Ram = Ram;
 
-    ppu Ppu = {0};
+    ppu Ppu = PpuInit();
 
     //Dissasemble(&Bus, Instructions, DisassemblyDict, StringData);
 

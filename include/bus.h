@@ -2,12 +2,7 @@
 #define _EMU_BUS_H
 
 #include "rom.h"
-
-typedef struct ppu {
-    u32 Cycle;
-    i32 Scanline;
-    bool32 FrameComplete;
-} ppu;
+#include "ppu.h"
 
 typedef struct bus {
     u32 TickCount;
