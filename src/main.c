@@ -88,6 +88,19 @@ GlobalTick(m6502_t* Cpu, u64* Pins, bus* Bus,
     Bus->TickCount++;
 }
 
+internal void
+DrawCpuState(pixel_buffer* DestinationPixelBuffer,
+             i32 CellX, i32 CellY,
+             m6502_t* Cpu,
+             bus* Bus,
+             u8* CharBuffer) {
+    sprintf(CharBuffer, "Tick:%010u", Bus->TickCount);
+    PrintToPixelBuffer(DestinationPixelBuffer, CellX, CellY, CharBuffer);
+    sprintf(CharBuffer, "PC:%04X A:%02X X:%02X Y:%02X S:%02X P:%02X",
+        Cpu->PC, Cpu->A, Cpu->X, Cpu->Y, Cpu->S, Cpu->P);
+    PrintToPixelBuffer(DestinationPixelBuffer, CellX, CellY + 1, CharBuffer);
+}
+
 int AppProc(app_t* App, void* UserData) {
     dumb_allocator Allocator = InitDumbAllocator(Megabytes(8));
     void* RomBuffer = DumbAllocate(&Allocator, Kilobytes(128));
@@ -180,6 +193,15 @@ int AppProc(app_t* App, void* UserData) {
                 GlobalTick(&Cpu, &Pins, &Bus,
                            &Ppu, &NesScreen);
             } while (Cpu.PC == SavedPC);
+            // TODO: Cpu.PC change doesn't mean that Cpu is on the next instruction
+            //       We also need to validate that this instruction is inside
+            //       DisassemledInstructions. But looks like this aproach doesn't work
+            //       properly.
+            while (!DisassemledInstructions[Cpu.PC]) {
+                GlobalTick(&Cpu, &Pins, &Bus,
+                           &Ppu, &NesScreen);
+            }
+
         } else if (DoOneFrame) {
             do {
                 GlobalTick(&Cpu, &Pins, &Bus,
@@ -190,9 +212,9 @@ int AppProc(app_t* App, void* UserData) {
 
         PixelBufferClear(&Screen, 0xFF000000);
 
-        DrawCode(&Screen, 1, 2, Cpu.PC, &Bus, DisassemledInstructions);
-
-        DrawRam(&Bus, &Screen, 1, 10, CharBuffer);
+        DrawCpuState(&Screen, 1, 1, &Cpu, &Bus, CharBuffer);
+        DrawCode(&Screen, 1, 4, Cpu.PC, &Bus, DisassemledInstructions);
+        DrawRam(&Bus, &Screen, 1, 12, CharBuffer);
 
         PixelBufferBlit(&Screen, &NesScreen, 8 * 54, 8 * 1);
 

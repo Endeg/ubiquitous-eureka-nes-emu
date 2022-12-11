@@ -42,7 +42,7 @@ PlatformPrint(char* message, ...);
 #define Gigabytes(Value) (Megabytes(Value) * 1024)
 #define Terabytes(Value) (Gigabytes(Value) * 1024)
 
-#define DumpIntExpression(Expression) (PlatformPrint("\tExpression: %s: %d", #Expression, Expression))
+#define DumpIntExpression(Expression) (PlatformPrint("\tExpression: %s: %u", #Expression, Expression))
 #define DumpU16HexExpression(Expression) (PlatformPrint("\tExpression: %s: %04X", #Expression, Expression))
 #define DumpU8HexExpression(Expression) (PlatformPrint("\tExpression: %s: %02X", #Expression, Expression))
 #define DumpFloatExpression(Expression) (PlatformPrint("\tExpression: %s: %.4f", #Expression, Expression))
