@@ -9,6 +9,7 @@
 
 #define RamSize (1024 * 2)
 #define PrgBankSize (16384)
+#define ChrBankSize (1024 * 8)
 
 typedef enum mirroring {
     Horizontal,
@@ -17,19 +18,22 @@ typedef enum mirroring {
 
 typedef struct rom {
     u8 PrgRomBankCount;
+    u8 ChrRomBankCount;
     u32 MapperId;
     mirroring Mirroring;
     bool32 IgnoreMirroring;
     bool32 HasPrgRam;
     bool32 HasTrainer;
     u8* Prg;
+    u8* Chr;
 } rom;
 
-#define INesHeaderSize (16)
-#define INesTrainerSize (512)
+#define INesHeaderSize    (16)
+#define INesTrainerSize   (512)
 #define INesPrgBanksCount (4)
-#define INesFlags6 (6)
-#define INesFlags7 (7)
+#define INesChrBanksCount (5)
+#define INesFlags6        (6)
+#define INesFlags7        (7)
 
 #define INesFlags6Mirroring       (0b00000001)
 #define INesFlags6PrgRam          (0b00000010)
@@ -43,6 +47,7 @@ internal rom ParseRom(loaded_file LoadedFile) {
     rom Result = {0};
 
     Result.PrgRomBankCount = LoadedFile.Data[INesPrgBanksCount];
+    Result.ChrRomBankCount = LoadedFile.Data[INesChrBanksCount];
     Result.MapperId = (LoadedFile.Data[INesFlags7] & INesFlags7MapperIdHigh) | ((LoadedFile.Data[INesFlags6] & INesFlags6MapperIdLow) >> 4);
     Result.Mirroring = (LoadedFile.Data[INesFlags6] & INesFlags6Mirroring) ? Vertical : Horizontal;
     Result.IgnoreMirroring = LoadedFile.Data[INesFlags6] & INesFlags6IgnoreMirroring;
@@ -54,6 +59,7 @@ internal rom ParseRom(loaded_file LoadedFile) {
         INesHeaderSize + ((Result.HasTrainer) ? INesTrainerSize : 0);
 
     Result.Prg = PrgSectionStart;
+    Result.Chr = PrgSectionStart + (PrgBankSize * Result.PrgRomBankCount);
 
     Assert(!Result.HasPrgRam);
     Assert(Result.MapperId == MapperNROM);
