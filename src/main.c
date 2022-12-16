@@ -37,8 +37,8 @@ PlatformPrint(char* FormatString, ...) {
 internal void
 DrawRam(bus* Bus, pixel_buffer* Buffer, i32 CellX, i32 CellY, u8* CharBuffer) {
     u16 Address = 0x0000;
-    i32 NumberOfColumns = 16;
-    for (i32 Row = 0; Row < 32; Row++) {
+    i32 NumberOfColumns = 24;
+    for (i32 Row = 0; Row < 85; Row++) {
         sprintf(CharBuffer, "%04X:\0", Address);
         PrintToPixelBuffer(Buffer,
                            CellX,
@@ -51,7 +51,7 @@ DrawRam(bus* Bus, pixel_buffer* Buffer, i32 CellX, i32 CellY, u8* CharBuffer) {
             sprintf(CharBuffer, "%02X\0", MemoryValue);
 
             PrintToPixelBuffer(Buffer,
-                               CellX + (Column * 3) + 5,
+                               CellX + (Column * 2) + 5,
                                CellY + Row,
                                CharBuffer);
 
@@ -66,10 +66,12 @@ CpuTick(m6502_t* Cpu, u64* Pins, bus* Bus) {
     u16 Address = M6502_GET_ADDR(*Pins);
     if (*Pins & M6502_RW) {
         u8 MemoryValue = MemoryRead(Bus, Address);
+        BusPostRead(Bus, Address);
         M6502_SET_DATA(*Pins, MemoryValue);
     } else {
         u8 MemoryValueToWrite = M6502_GET_DATA(*Pins);
         MemoryWrite(Bus, Address, MemoryValueToWrite);
+        //TODO: Memory post-write
     }
 }
 
@@ -119,13 +121,12 @@ int AppProc(app_t* App, void* UserData) {
     Assert(RomFile.Data[3] == 0x1A);
 
     u8* Ram = DumbAllocate(&Allocator, Kilobytes(2));
-
+    ppu Ppu = PpuInit();
     rom Rom = ParseRom(RomFile);
     bus Bus = {0};
     Bus.Rom = &Rom;
     Bus.Ram = Ram;
-
-    ppu Ppu = PpuInit();
+    Bus.Ppu = &Ppu;
 
     Dissasemble(&Bus,
                 Instructions,
@@ -151,6 +152,7 @@ int AppProc(app_t* App, void* UserData) {
     //app_interpolation(App, APP_INTERPOLATION_NONE);
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
+    //TODO: Fix disassembled code rendering during CPU startup
     bool32 Animate = 1;
 
     f32 AppTimeFrequency = app_time_freq(App);
@@ -215,6 +217,11 @@ int AppProc(app_t* App, void* UserData) {
         DrawCpuState(&Screen, 1, 1, &Cpu, &Bus, CharBuffer);
         DrawCode(&Screen, 1, 4, Cpu.PC, &Bus, DisassemledInstructions);
         DrawRam(&Bus, &Screen, 1, 12, CharBuffer);
+
+        {
+            sprintf(CharBuffer, "Scanline: %04d, Dot: %03d", Ppu.Scanline, Ppu.Dot);
+            PrintToPixelBuffer(&Screen, 24, 1, CharBuffer);
+        }
 
         PixelBufferBlit(&Screen, &NesScreen, 8 * 54, 8 * 1);
 
