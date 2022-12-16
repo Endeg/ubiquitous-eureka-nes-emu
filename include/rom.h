@@ -2,7 +2,7 @@
 #define _EMU_ROM_H
 
 #include "base.h"
-
+#include "emu_types.h"
 #include "file_io.h"
 
 #define MapperNROM (0)
@@ -10,23 +10,6 @@
 #define RamSize (1024 * 2)
 #define PrgBankSize (16384)
 #define ChrBankSize (1024 * 8)
-
-typedef enum mirroring {
-    Horizontal,
-    Vertical,
-} mirroring;
-
-typedef struct rom {
-    u8 PrgRomBankCount;
-    u8 ChrRomBankCount;
-    u32 MapperId;
-    mirroring Mirroring;
-    bool32 IgnoreMirroring;
-    bool32 HasPrgRam;
-    bool32 HasTrainer;
-    u8* Prg;
-    u8* Chr;
-} rom;
 
 #define INesHeaderSize    (16)
 #define INesTrainerSize   (512)

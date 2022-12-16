@@ -1,15 +1,9 @@
 #ifndef _EMU_BUS_H
 #define _EMU_BUS_H
 
+#include "emu_types.h"
 #include "rom.h"
 #include "ppu.h"
-
-typedef struct bus {
-    u32 TickCount;
-    rom* Rom;
-    u8* Ram;
-    ppu* Ppu;
-} bus;
 
 // NOTE: PPUCTRL bits
 #define NmiEnable            (0b10000000)
@@ -43,6 +37,7 @@ MemoryRead(bus* Bus, u16 Address) {
     } else if (Address >= 0x8000 && Address <= 0xFFFF) {
         //Mapper space
         Assert(Bus->Rom->MapperId == MapperNROM);
+        //TODO: Mapper should work here! For now: NROM only
 
         u16 BaseAddress = Address - 0x8000;
 

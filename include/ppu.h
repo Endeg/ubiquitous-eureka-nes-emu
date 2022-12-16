@@ -2,30 +2,13 @@
 #define _EMU_PPU_H
 
 #include "base.h"
+#include "emu_types.h"
+#include "bus.h"
 
 #include <stdlib.h>
 
 #define NesScreenWidth (256)
 #define NesScreenHeight (240)
-
-typedef struct status_register {
-    u8 VerticalBlank;
-    u8 SpriteZeroHit;
-    u8 SpriteOverflow;
-} status_register;
-
-typedef struct ppu {
-    i32 Dot;
-    i32 Scanline;
-    bool32 FrameComplete;
-    status_register Status;
-} ppu;
-
-typedef struct ppu_pixel {
-    u32 Color;
-    i32 X;
-    i32 Y;
-} ppu_pixel;
 
 // NOTE: PPUSTATUS bits
 #define VBlankOffset         (7)
@@ -83,6 +66,29 @@ PpuTick(ppu* Ppu) {
 			Ppu->FrameComplete = 1;
 		}
 	}
+}
+
+internal u8
+PpuRead(bus* Bus, u16 Address) {
+    if (Address >= 0x0000 && Address <= 0x1FFF) {
+        Assert(Bus->Rom->MapperId == MapperNROM);
+        //TODO: Mapper should work here! For now: NROM only
+    }
+}
+
+internal u32
+PpuGetTilePixel(bus* Bus,
+                pattern_table_half Half,
+                i32 Row, i32 Column,
+                i32 OffsetX, i32 OffsetY) {
+    u32 PoorMansPallete[4] = {
+        0xFF000000,
+        0xFF333333,
+        0xFF777777,
+        0xFFEEEEEE,
+    };
+
+    return 0xFF000000;
 }
 
 #endif
