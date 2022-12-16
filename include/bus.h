@@ -20,14 +20,19 @@ typedef struct bus {
 #define IncrementMode        (0b00000100)
 #define NametableSelect      (0b00000011)
 
-#define PPUCTRL   (0x2000)
-#define PPUMASK   (0x2001)
-#define PPUSTATUS (0x2002)
-#define OAMADDR   (0x2003)
-#define OAMDATA   (0x2004)
-#define PPUSCROLL (0x2005)
-#define PPUADDR   (0x2006)
-#define PPUDATA   (0x2007)
+#define PpuRegisterAddressStart (0x2000)
+#define PpuRegisterAddressEnd   (0x3FFF)
+#define PpuRegisterCount        (0x0008)
+
+
+#define PPUCTRL   (0x0000)
+#define PPUMASK   (0x0001)
+#define PPUSTATUS (0x0002)
+#define OAMADDR   (0x0003)
+#define OAMDATA   (0x0004)
+#define PPUSCROLL (0x0005)
+#define PPUADDR   (0x0006)
+#define PPUDATA   (0x0007)
 #define OAMDMA    (0x4014)
 
 internal u8
@@ -53,9 +58,11 @@ MemoryRead(bus* Bus, u16 Address) {
         } else {
             Halt("Not sure, need debugging.");
         }
-    } else if (Address == PPUSTATUS) {
-        //TODO: Mirror PPU registers
-        return PpuPackStatus(Bus->Ppu);
+    } else if (Address >= PpuRegisterAddressStart && Address <= PpuRegisterAddressEnd) {
+        u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
+        if (PpuRegister == PPUSTATUS) {
+            return PpuPackStatus(Bus->Ppu);
+        }
     }
 
     return 0x00;
@@ -63,10 +70,11 @@ MemoryRead(bus* Bus, u16 Address) {
 
 internal void
 MemoryWrite(bus* Bus, u16 Address, u8 Value) {
-    if ((Address >= 0x2000 && Address <= 0X2007) ||
-        (Address >= 0x2008 && Address <= 0X3FFF)) {
+    if (Address >= PpuRegisterAddressStart && Address <= PpuRegisterAddressEnd) {
+        u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
         // PPU Registers
         DumpU16HexExpression(Address);
+        DumpU16HexExpression(PpuRegister);
         DumpU8HexExpression(Value);
         //TODO: need to store properly
     } else if (Address >= 0x0000 && Address <= 0X1FFF) {
@@ -86,9 +94,11 @@ MemoryWrite(bus* Bus, u16 Address, u8 Value) {
 
 internal void
 BusPostRead(bus* Bus, u16 Address) {
-    if (Address == PPUSTATUS) {
-        //TODO: Mirror PPU registers
-        Bus->Ppu->Status.VerticalBlank = 0;
+    if (Address >= PpuRegisterAddressStart && Address <= PpuRegisterAddressEnd) {
+        u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
+        if (PpuRegister == PPUSTATUS) {
+            Bus->Ppu->Status.VerticalBlank = 0;
+        }
     }
 }
 
