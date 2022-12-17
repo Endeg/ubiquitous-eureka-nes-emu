@@ -47,7 +47,7 @@ DrawRam(bus* Bus, pixel_buffer* Buffer, i32 CellX, i32 CellY, u8* CharBuffer) {
                            CharBuffer);
 
         for (i32 Column = 0; Column < NumberOfColumns; Column++) {
-            u8 MemoryValue = MemoryRead(Bus, Address);
+            u8 MemoryValue = BusRead(Bus, Address);
 
             sprintf(CharBuffer, "%02X\0", MemoryValue);
 
@@ -66,12 +66,12 @@ CpuTick(m6502_t* Cpu, u64* Pins, bus* Bus) {
     *Pins = m6502_tick(Cpu, *Pins);
     u16 Address = M6502_GET_ADDR(*Pins);
     if (*Pins & M6502_RW) {
-        u8 MemoryValue = MemoryRead(Bus, Address);
+        u8 MemoryValue = BusRead(Bus, Address);
         BusPostRead(Bus, Address);
         M6502_SET_DATA(*Pins, MemoryValue);
     } else {
         u8 MemoryValueToWrite = M6502_GET_DATA(*Pins);
-        MemoryWrite(Bus, Address, MemoryValueToWrite);
+        BusWrite(Bus, Address, MemoryValueToWrite);
         //TODO: Memory post-write
     }
 }

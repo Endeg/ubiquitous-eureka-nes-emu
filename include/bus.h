@@ -1,6 +1,8 @@
 #ifndef _EMU_BUS_H
 #define _EMU_BUS_H
 
+#include "base.h"
+#include "constants.h"
 #include "emu_types.h"
 #include "rom.h"
 #include "ppu.h"
@@ -14,23 +16,8 @@
 #define IncrementMode        (0b00000100)
 #define NametableSelect      (0b00000011)
 
-#define PpuRegisterAddressStart (0x2000)
-#define PpuRegisterAddressEnd   (0x3FFF)
-#define PpuRegisterCount        (0x0008)
-
-
-#define PPUCTRL   (0x0000)
-#define PPUMASK   (0x0001)
-#define PPUSTATUS (0x0002)
-#define OAMADDR   (0x0003)
-#define OAMDATA   (0x0004)
-#define PPUSCROLL (0x0005)
-#define PPUADDR   (0x0006)
-#define PPUDATA   (0x0007)
-#define OAMDMA    (0x4014)
-
 internal u8
-MemoryRead(bus* Bus, u16 Address) {
+BusRead(bus* Bus, u16 Address) {
     if (Address >= 0x0000 && Address <= 0x07FF) {
         //TODO: Mirror RAM
         return Bus->Ram[Address];
@@ -51,55 +38,27 @@ MemoryRead(bus* Bus, u16 Address) {
                 return Bus->Rom->Prg[BaseAddress];
             }
         } else {
-            Halt("Not sure, need debugging.");
+            MemoryAccessTrap(Address, 0x00, "Not sure, need debugging.");
         }
     } else if (Address >= PpuRegisterAddressStart && Address <= PpuRegisterAddressEnd) {
-        u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
-        if (PpuRegister == PPUCTRL) {
-            return Bus->Ppu->Control;
-        } else if (PpuRegister == PPUSTATUS) {
-            return PpuPackStatus(Bus->Ppu);
-        } else {
-            // DumpU16HexExpression(Address);
-            // Halt("No reading from here!");
-        }
+        return PpuRegisterRead(Bus, Address);
     }
 
     return 0x00;
 }
 
 internal void
-MemoryWrite(bus* Bus, u16 Address, u8 Value) {
+BusWrite(bus* Bus, u16 Address, u8 Value) {
     if (Address >= PpuRegisterAddressStart && Address <= PpuRegisterAddressEnd) {
-        u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
-        // PPU Registers
-        if (PpuRegister == PPUCTRL) {
-            Bus->Ppu->Control = Value;
-        } else if (PpuRegister == PPUMASK) {
-            Bus->Ppu->Mask = Value;
-        } else if (PpuRegister == PPUSTATUS) {
-            // TODO: Check if writing to PPUSTATUS is ever legit
-        } else if (PpuRegister == OAMADDR) {
-            PpuRegisterWriteOamAddress(Bus, Value);
-        } else if (PpuRegister == OAMDATA) {
-            PpuRegisterWriteOamData(Bus, Value);
-        } else {
-            // DumpU16HexExpression(Address);
-            // Halt("No writing here!");
-        }
-        //TODO: need to store properly
+        PpuRegisterWrite(Bus, Address, Value);
     } else if (Address >= 0x0000 && Address <= 0X1FFF) {
         // RAM
-        // DumpU16HexExpression(Address);
-        // DumpU8HexExpression(Value);
         u16 RamBaseAddress = Address % RamSize;
         Bus->Ram[RamBaseAddress] = Value;
     } else if (Address >= 0x4000 && Address <= 0X4017) {
         // APU I/O
     } else {
-        DumpU16HexExpression(Address);
-        DumpU8HexExpression(Value);
-        Halt("TODO: Need writing!");
+        MemoryAccessTrap(Address, Value, "Unexpected writing");
     }
 }
 

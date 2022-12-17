@@ -75,4 +75,10 @@ PlatformPrint(char* message, ...);
 #define Halt(Message)
 #endif
 
+#define MemoryAccessTrap(Address, Value, Message) {\
+    DumpU16HexExpression(Address);\
+    DumpU8HexExpression(Value);\
+    Halt(Message);\
+}\
+
 #endif

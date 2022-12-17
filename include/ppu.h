@@ -2,6 +2,7 @@
 #define _EMU_PPU_H
 
 #include "base.h"
+#include "constants.h"
 #include "emu_types.h"
 #include "bus.h"
 
@@ -84,15 +85,13 @@ PpuRead(bus* Bus, u16 Address) {
         //TODO: Mapper should work here! For now: NROM only
         return Bus->Rom->Chr[Address];
     }
-    Halt("Let's not read here, yet");
+    MemoryAccessTrap(Address, 0x00, "Let's not read here, yet")
     return 0x00;
 }
 
 internal void
 PpuWrite(bus* Bus, u16 Address, u8 Value) {
-    DumpU16HexExpression(Address);
-    DumpU8HexExpression(Value);
-    Halt("No writing to PPU, yet");
+    MemoryAccessTrap(Address, Value, "No writing to PPU, yet");
 }
 
 #define PatternSizeInBytes       (16)
@@ -158,6 +157,42 @@ PpuRegisterWriteOamAddress(bus* Bus, u8 Value) {
 internal void
 PpuRegisterWriteOamData(bus* Bus, u8 Value) {
     PpuWrite(Bus, Bus->Ppu->Oam.Address, Value);
+}
+
+internal u8
+PpuRegisterRead(bus* Bus, u16 Address) {
+    u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
+    if (PpuRegister == PPUCTRL) {
+        return Bus->Ppu->Control;
+    } else if (PpuRegister == PPUSTATUS) {
+        return PpuPackStatus(Bus->Ppu);
+    } else {
+        MemoryAccessTrap(Address, 0x00, "No reading from here!");
+    }
+
+    return 0x00;
+}
+
+internal void
+PpuRegisterWrite(bus* Bus, u16 Address, u8 Value) {
+    u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
+    // PPU Registers
+    if (PpuRegister == PPUCTRL) {
+        Bus->Ppu->Control = Value;
+    } else if (PpuRegister == PPUMASK) {
+        Bus->Ppu->Mask = Value;
+    } else if (PpuRegister == PPUSTATUS) {
+        // TODO: Check if writing to PPUSTATUS is ever legit
+    } else if (PpuRegister == OAMADDR) {
+        PpuRegisterWriteOamAddress(Bus, Value);
+    } else if (PpuRegister == OAMDATA) {
+        PpuRegisterWriteOamData(Bus, Value);
+    } else {
+        // DumpU16HexExpression(Address);
+        // Halt("No writing here!");
+        MemoryAccessTrap(Address, Value, "No writing here!");
+    }
+    //TODO: need to store properly (what?)
 }
 
 #endif

@@ -845,7 +845,7 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString);
         } break;
         case Immediate: {
-            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue = BusRead(Bus, Address + 1);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X)     %s #$%02X\0",
@@ -854,7 +854,7 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, ArgumentValue);
         } break;
         case ZeroPage: {
-            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue = BusRead(Bus, Address + 1);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X)     %s $%02X\0",
@@ -863,7 +863,7 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, ArgumentValue);
         } break;
         case ZeroPageX: {
-            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue = BusRead(Bus, Address + 1);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X)     %s $%02X,X\0",
@@ -872,7 +872,7 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, ArgumentValue);
         } break;
         case ZeroPageY: {
-            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue = BusRead(Bus, Address + 1);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X)     %s $%02X,Y\0",
@@ -881,7 +881,7 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, ArgumentValue);
         } break;
         case Relative: {
-            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue = BusRead(Bus, Address + 1);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X)     %s *%d\0",
@@ -890,8 +890,8 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, (i8)ArgumentValue);
         } break;
         case Absolute: {
-            u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
-            u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
+            u8 ArgumentValue1 = BusRead(Bus, Address + 1);
+            u8 ArgumentValue2 = BusRead(Bus, Address + 2);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X, %02X) %s $%02X%02X\0",
@@ -900,8 +900,8 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, ArgumentValue2, ArgumentValue1);
         } break;
         case AbsoluteX: {
-            u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
-            u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
+            u8 ArgumentValue1 = BusRead(Bus, Address + 1);
+            u8 ArgumentValue2 = BusRead(Bus, Address + 2);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X, %02X) %s $%02X%02X,X\0",
@@ -910,8 +910,8 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, ArgumentValue2, ArgumentValue1);
         } break;
         case AbsoluteY: {
-            u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
-            u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
+            u8 ArgumentValue1 = BusRead(Bus, Address + 1);
+            u8 ArgumentValue2 = BusRead(Bus, Address + 2);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X, %02X) %s $%02X%02X,Y\0",
@@ -920,8 +920,8 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, ArgumentValue2, ArgumentValue1);
         } break;
         case Indirect: {
-            u8 ArgumentValue1 = MemoryRead(Bus, Address + 1);
-            u8 ArgumentValue2 = MemoryRead(Bus, Address + 2);
+            u8 ArgumentValue1 = BusRead(Bus, Address + 1);
+            u8 ArgumentValue2 = BusRead(Bus, Address + 2);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X, %02X) %s $(%02X%02X)\0",
@@ -930,7 +930,7 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, ArgumentValue2, ArgumentValue1);
         } break;
         case IndirectX: {
-            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue = BusRead(Bus, Address + 1);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X)     %s ($%02X,X)\0",
@@ -939,7 +939,7 @@ FormatDisassembledInstruction(u16 Address,
                 MnemonicString, ArgumentValue);
         } break;
         case IndirectY: {
-            u8 ArgumentValue = MemoryRead(Bus, Address + 1);
+            u8 ArgumentValue = BusRead(Bus, Address + 1);
             sprintf(
                 CharBuffer,
                 "%04X: (%02X, %02X)     %s ($%02X),Y\0",
@@ -973,7 +973,7 @@ Dissasemble(bus* Bus,
     u8* StringData = DissasemblyStringData;
 
     do {
-        u8 InstructionOpCode = MemoryRead(Bus, Address);
+        u8 InstructionOpCode = BusRead(Bus, Address);
 
         FormatDisassembledInstruction((u16)Address,
                                       InstructionOpCode,
