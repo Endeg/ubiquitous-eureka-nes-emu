@@ -55,8 +55,13 @@ MemoryRead(bus* Bus, u16 Address) {
         }
     } else if (Address >= PpuRegisterAddressStart && Address <= PpuRegisterAddressEnd) {
         u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
-        if (PpuRegister == PPUSTATUS) {
+        if (PpuRegister == PPUCTRL) {
+            return Bus->Ppu->Control;
+        } else if (PpuRegister == PPUSTATUS) {
             return PpuPackStatus(Bus->Ppu);
+        } else {
+            // DumpU16HexExpression(Address);
+            // Halt("No reading from here!");
         }
     }
 
@@ -68,9 +73,14 @@ MemoryWrite(bus* Bus, u16 Address, u8 Value) {
     if (Address >= PpuRegisterAddressStart && Address <= PpuRegisterAddressEnd) {
         u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
         // PPU Registers
-        DumpU16HexExpression(Address);
-        DumpU16HexExpression(PpuRegister);
-        DumpU8HexExpression(Value);
+        if (PpuRegister == PPUCTRL) {
+            Bus->Ppu->Control = Value;
+        } else if (PpuRegister == PPUSTATUS) {
+            // TODO: Check if writing to PPUSTATUS is ever legit
+        } else {
+            // DumpU16HexExpression(Address);
+            // Halt("No writing here!");
+        }
         //TODO: need to store properly
     } else if (Address >= 0x0000 && Address <= 0X1FFF) {
         // RAM

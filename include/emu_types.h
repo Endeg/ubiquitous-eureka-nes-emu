@@ -30,6 +30,7 @@ typedef struct ppu {
     i32 Dot;
     i32 Scanline;
     bool32 FrameComplete;
+    u8 Control;
     status_register Status;
 } ppu;
 

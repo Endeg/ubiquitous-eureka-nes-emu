@@ -10,6 +10,15 @@
 #define NesScreenWidth (256)
 #define NesScreenHeight (240)
 
+// NOTE: PPUCTRL Bits
+#define NmiEnableMask            (0b10000000)
+#define MasterSlaveMask          (0b01000000)
+#define SpriteHeightMask         (0b00100000)
+#define BackgroundTileSelectMask (0b00010000)
+#define SpriteTileSelectMask     (0b00001000)
+#define IncrementModeMask        (0b00000100)
+#define NametableSelectMask      (0b00000011)
+
 // NOTE: PPUSTATUS bits
 #define VBlankOffset         (7)
 // #define VBlank               (0b10000000)

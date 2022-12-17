@@ -153,7 +153,7 @@ int AppProc(app_t* App, void* UserData) {
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
     //TODO: Fix disassembled code rendering during CPU startup
-    bool32 Animate = 0;
+    bool32 Animate = 1;
 
     f32 AppTimeFrequency = app_time_freq(App);
 
