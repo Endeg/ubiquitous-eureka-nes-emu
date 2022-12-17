@@ -26,12 +26,21 @@ typedef struct status_register {
     u8 SpriteOverflow;
 } status_register;
 
+typedef struct oam {
+    u16 TempAddress;
+    u16 Address;
+    u8 AddressLach;
+    //u8 Data;
+} oam;
+
 typedef struct ppu {
     i32 Dot;
     i32 Scanline;
     bool32 FrameComplete;
     u8 Control;
+    u8 Mask;
     status_register Status;
+    oam Oam;
 } ppu;
 
 typedef struct ppu_pixel {

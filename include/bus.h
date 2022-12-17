@@ -75,8 +75,14 @@ MemoryWrite(bus* Bus, u16 Address, u8 Value) {
         // PPU Registers
         if (PpuRegister == PPUCTRL) {
             Bus->Ppu->Control = Value;
+        } else if (PpuRegister == PPUMASK) {
+            Bus->Ppu->Mask = Value;
         } else if (PpuRegister == PPUSTATUS) {
             // TODO: Check if writing to PPUSTATUS is ever legit
+        } else if (PpuRegister == OAMADDR) {
+            PpuRegisterWriteOamAddress(Bus, Value);
+        } else if (PpuRegister == OAMDATA) {
+            PpuRegisterWriteOamData(Bus, Value);
         } else {
             // DumpU16HexExpression(Address);
             // Halt("No writing here!");
@@ -103,6 +109,10 @@ BusPostRead(bus* Bus, u16 Address) {
         u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
         if (PpuRegister == PPUSTATUS) {
             Bus->Ppu->Status.VerticalBlank = 0;
+        } else if (PpuRegister == PPUMASK) {
+        } else if (PpuRegister == PPUSTATUS) {
+        } else if (PpuRegister == OAMADDR) {
+        } else if (PpuRegister == OAMDATA) {
         }
     }
 }

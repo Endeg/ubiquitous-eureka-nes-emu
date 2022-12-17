@@ -88,6 +88,13 @@ PpuRead(bus* Bus, u16 Address) {
     return 0x00;
 }
 
+internal void
+PpuWrite(bus* Bus, u16 Address, u8 Value) {
+    DumpU16HexExpression(Address);
+    DumpU8HexExpression(Value);
+    Halt("No writing to PPU, yet");
+}
+
 #define PatternSizeInBytes       (16)
 #define PatternPlaneSizeInBytes  (8)
 #define PatternSizeInPixels      (8)
@@ -134,6 +141,23 @@ PpuGetTilePixel(bus* Bus,
     };
 
     return PoorMansPallete[PalleteIndex];
+}
+
+internal void
+PpuRegisterWriteOamAddress(bus* Bus, u8 Value) {
+    if (Bus->Ppu->Oam.AddressLach) {
+        Bus->Ppu->Oam.TempAddress = (Bus->Ppu->Oam.Address & 0xFF00) | (Value << 0);
+        Bus->Ppu->Oam.AddressLach = 0;
+    } else {
+        Bus->Ppu->Oam.TempAddress = (Bus->Ppu->Oam.Address & 0x00FF) | (Value << 8);
+        Bus->Ppu->Oam.Address = Bus->Ppu->Oam.TempAddress;
+        Bus->Ppu->Oam.AddressLach = 1;
+    }
+}
+
+internal void
+PpuRegisterWriteOamData(bus* Bus, u8 Value) {
+    PpuWrite(Bus, Bus->Ppu->Oam.Address, Value);
 }
 
 #endif

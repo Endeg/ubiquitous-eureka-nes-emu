@@ -18,7 +18,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define RomPath ("Super Mario Bros. (JU) [!].nes")
+// #define RomPath ("Super Mario Bros. (JU) [!].nes")
+#define RomPath ("Donkey Kong (U) (PRG1) [!p].nes")
 
 void
 PlatformPrint(char* FormatString, ...) {
@@ -219,9 +220,18 @@ int AppProc(app_t* App, void* UserData) {
         DrawRam(&Bus, &Screen, 1, 12, CharBuffer);
 
         {
-            sprintf(CharBuffer, "Scanline: %04d, Dot: %03d", Ppu.Scanline, Ppu.Dot);
-            PrintToPixelBuffer(&Screen, 24, 1, CharBuffer);
+            sprintf(CharBuffer, "S: %04d, D: %03d, CTRL: %02X, STATUS: %02X, OAMADDR: %04X (%04X)",
+                Ppu.Scanline, Ppu.Dot,
+                Ppu.Control,
+                PpuPackStatus(&Ppu),
+                Ppu.Oam.Address,
+                Ppu.Oam.TempAddress);
+            PrintToPixelBuffer(&Screen, 1, 3, CharBuffer);
         }
+
+        // u8 Control;
+        // status_register Status;
+        // oam Oam;
 
         PixelBufferBlit(&Screen, &NesScreen, 8 * 54, 8 * 1);
 
