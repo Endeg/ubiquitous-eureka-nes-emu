@@ -75,6 +75,8 @@ PpuRead(bus* Bus, u16 Address) {
         //TODO: Mapper should work here! For now: NROM only
         return Bus->Rom->Chr[Address];
     }
+    Halt("Let's not read here, yet");
+    return 0x00;
 }
 
 #define PatternSizeInBytes       (16)
@@ -99,7 +101,7 @@ PpuGetTilePixel(bus* Bus,
 
     PatternAddress += (PatternsPerColum * Row * PatternSizeInBytes) + (Column * PatternSizeInBytes);
 
-    u8 PatternPixelBitMask = 0b1000000 >> OffsetX;
+    u8 PatternPixelBitMask = 0b10000000 >> OffsetX;
 
     u8 PatternRows[2] = {
         PpuRead(Bus, PatternAddress + OffsetY),

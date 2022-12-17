@@ -149,7 +149,7 @@ int AppProc(app_t* App, void* UserData) {
         (u32*)DumbAllocate(&Allocator, sizeof(u32) * NesScreenWidth * NesScreenHeight),
     };
 
-    app_interpolation(App, APP_INTERPOLATION_NONE);
+    // app_interpolation(App, APP_INTERPOLATION_NONE);
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
     //TODO: Fix disassembled code rendering during CPU startup
