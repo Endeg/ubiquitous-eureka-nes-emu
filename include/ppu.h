@@ -73,22 +73,56 @@ PpuRead(bus* Bus, u16 Address) {
     if (Address >= 0x0000 && Address <= 0x1FFF) {
         Assert(Bus->Rom->MapperId == MapperNROM);
         //TODO: Mapper should work here! For now: NROM only
+        return Bus->Rom->Chr[Address];
     }
 }
+
+#define PatternSizeInBytes       (16)
+#define PatternPlaneSizeInBytes  (8)
+#define PatternSizeInPixels      (8)
+#define PatternsPerColum         (16)
+#define LeftPatternTableAddress  (0x0000)
+#define RightPatternTableAddress (0x1000)
 
 internal u32
 PpuGetTilePixel(bus* Bus,
                 pattern_table_half Half,
                 i32 Row, i32 Column,
                 i32 OffsetX, i32 OffsetY) {
+
+    u16 PatternAddress;
+    if (Half == Left) {
+        PatternAddress = LeftPatternTableAddress;
+    } else {
+        PatternAddress = RightPatternTableAddress;
+    }
+
+    PatternAddress += (PatternsPerColum * Row * PatternSizeInBytes) + (Column * PatternSizeInBytes);
+
+    u8 PatternPixelBitMask = 0b1000000 >> OffsetX;
+
+    u8 PatternRows[2] = {
+        PpuRead(Bus, PatternAddress + OffsetY),
+        PpuRead(Bus, PatternAddress + OffsetY + PatternPlaneSizeInBytes),
+    };
+
+    PatternRows[0] = PatternRows[0] & PatternPixelBitMask;
+    PatternRows[1] = PatternRows[1] & PatternPixelBitMask;
+
+    PatternRows[0] = (PatternRows[0]) ? 0b00000001 : 0b00000000;
+    PatternRows[1] = (PatternRows[1]) ? 0b00000010 : 0b00000000;
+
+    u8 PalleteIndex = PatternRows[0] | PatternRows[1];
+    Assert(PalleteIndex >= 0 && PalleteIndex <= 3);
+
     u32 PoorMansPallete[4] = {
-        0xFF000000,
-        0xFF333333,
-        0xFF777777,
+        0xFFCC0000,
+        0xFF33CC33,
+        0xFF7777CC,
         0xFFEEEEEE,
     };
 
-    return 0xFF000000;
+    return PoorMansPallete[PalleteIndex];
 }
 
 #endif

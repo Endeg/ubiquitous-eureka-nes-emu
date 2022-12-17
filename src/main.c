@@ -149,7 +149,7 @@ int AppProc(app_t* App, void* UserData) {
         (u32*)DumbAllocate(&Allocator, sizeof(u32) * NesScreenWidth * NesScreenHeight),
     };
 
-    //app_interpolation(App, APP_INTERPOLATION_NONE);
+    app_interpolation(App, APP_INTERPOLATION_NONE);
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
     //TODO: Fix disassembled code rendering during CPU startup
@@ -224,6 +224,34 @@ int AppProc(app_t* App, void* UserData) {
         }
 
         PixelBufferBlit(&Screen, &NesScreen, 8 * 54, 8 * 1);
+
+        {
+            i32 PatternTablesX = 8 * 54;
+            i32 PatternTablesY = 8 * 40;
+
+            //TODO: Better name for PatternsPerColum
+            for (i32 Row = 0; Row < PatternsPerColum; Row++) {
+                for (i32 Column = 0; Column < PatternsPerColum; Column++) {
+                    for (i32 PixelOffsetY = 0; PixelOffsetY < PatternSizeInPixels; PixelOffsetY++) {
+                        for (i32 PixelOffsetX = 0; PixelOffsetX < PatternSizeInPixels; PixelOffsetX++) {
+                            {
+                                i32 DestX = PatternTablesX + (Column * PatternSizeInPixels) + PixelOffsetX;
+                                i32 DestY = PatternTablesY + (Row * PatternSizeInPixels) + PixelOffsetY;
+                                u32 DestColor = PpuGetTilePixel(&Bus, Left, Row, Column, PixelOffsetX, PixelOffsetY);
+                                PixelBufferPutPixel(&Screen, DestX, DestY, DestColor);
+                            }
+                            {
+                                i32 DestX = PatternTablesX + (Column * PatternSizeInPixels) + PixelOffsetX + 128;
+                                i32 DestY = PatternTablesY + (Row * PatternSizeInPixels) + PixelOffsetY;
+                                u32 DestColor = PpuGetTilePixel(&Bus, Right, Row, Column, PixelOffsetX, PixelOffsetY);
+                                PixelBufferPutPixel(&Screen, DestX, DestY, DestColor);
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
 
         app_present(App, Screen.Memory, ScreenWidth, ScreenHeight, 0xFFFFFF, 0x220000);
         u64 AppTimeFrameEnd = app_time_count(App);
