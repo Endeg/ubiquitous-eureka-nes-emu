@@ -29,7 +29,6 @@ typedef struct status_register {
 typedef struct oam {
     u16 TempAddress;
     u16 Address;
-    u8 AddressLach;
     //u8 Data;
 } oam;
 
@@ -37,6 +36,9 @@ typedef struct ppu {
     i32 Dot;
     i32 Scanline;
     bool32 FrameComplete;
+    u8 AddressLatch;
+    u16 TempAddress;
+    u16 Address;
     u8 Control;
     u8 Mask;
     status_register Status;

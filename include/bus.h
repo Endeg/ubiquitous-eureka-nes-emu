@@ -68,6 +68,7 @@ BusPostRead(bus* Bus, u16 Address) {
         u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
         if (PpuRegister == PPUSTATUS) {
             Bus->Ppu->Status.VerticalBlank = 0;
+            Bus->Ppu->AddressLatch = 0;
         } else if (PpuRegister == PPUMASK) {
         } else if (PpuRegister == PPUSTATUS) {
         } else if (PpuRegister == OAMADDR) {

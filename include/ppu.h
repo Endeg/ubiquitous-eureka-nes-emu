@@ -142,23 +142,6 @@ PpuGetTilePixel(bus* Bus,
     return PoorMansPallete[PalleteIndex];
 }
 
-internal void
-PpuRegisterWriteOamAddress(bus* Bus, u8 Value) {
-    if (Bus->Ppu->Oam.AddressLach) {
-        Bus->Ppu->Oam.TempAddress = (Bus->Ppu->Oam.Address & 0xFF00) | (Value << 0);
-        Bus->Ppu->Oam.AddressLach = 0;
-    } else {
-        Bus->Ppu->Oam.TempAddress = (Bus->Ppu->Oam.Address & 0x00FF) | (Value << 8);
-        Bus->Ppu->Oam.Address = Bus->Ppu->Oam.TempAddress;
-        Bus->Ppu->Oam.AddressLach = 1;
-    }
-}
-
-internal void
-PpuRegisterWriteOamData(bus* Bus, u8 Value) {
-    PpuWrite(Bus, Bus->Ppu->Oam.Address, Value);
-}
-
 internal u8
 PpuRegisterRead(bus* Bus, u16 Address) {
     u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
@@ -196,9 +179,27 @@ PpuRegisterWrite(bus* Bus, u16 Address, u8 Value) {
     } else if (PpuRegister == PPUSTATUS) {
         // TODO: Check if writing to PPUSTATUS is ever legit
     } else if (PpuRegister == OAMADDR) {
-        PpuRegisterWriteOamAddress(Bus, Value);
+        MemoryAccessTrap(Address, Value, "OAMADDR");
     } else if (PpuRegister == OAMDATA) {
-        PpuRegisterWriteOamData(Bus, Value);
+        MemoryAccessTrap(Address, Value, "OAMDATA");
+    } else if (PpuRegister == PPUSCROLL) {
+        //TODO: Figure out scrolling
+        if (Bus->Ppu->AddressLatch) {
+            Bus->Ppu->AddressLatch = 0;
+        } else {
+            Bus->Ppu->AddressLatch = 1;
+        }
+    } else if (PpuRegister == PPUADDR) {
+        if (Bus->Ppu->AddressLatch) {
+            Bus->Ppu->TempAddress = (Bus->Ppu->TempAddress & 0xFF00) | (Value << 0);
+            Bus->Ppu->AddressLatch = 0;
+        } else {
+            Bus->Ppu->TempAddress = (Bus->Ppu->TempAddress & 0x00FF) | (Value << 8);
+            Bus->Ppu->Address = Bus->Ppu->TempAddress;
+            Bus->Ppu->AddressLatch = 1;
+        }
+    } else if (PpuRegister == PPUDATA) {
+        PpuWrite(Bus, Bus->Ppu->Address, Value);
     } else {
         MemoryAccessTrap(Address, Value, "No writing here!");
     }
