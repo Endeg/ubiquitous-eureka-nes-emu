@@ -164,8 +164,20 @@ PpuRegisterRead(bus* Bus, u16 Address) {
     u16 PpuRegister = (Address - PpuRegisterAddressStart) % PpuRegisterCount;
     if (PpuRegister == PPUCTRL) {
         return Bus->Ppu->Control;
+    } else if (PpuRegister == PPUMASK) {
+        return Bus->Ppu->Mask;
     } else if (PpuRegister == PPUSTATUS) {
         return PpuPackStatus(Bus->Ppu);
+    } else if (PpuRegister == OAMADDR) {
+        return 0x00;
+    } else if (PpuRegister == OAMDATA) {
+        return 0x00;
+    } else if (PpuRegister == PPUSCROLL) {
+        return 0x00;
+    } else if (PpuRegister == PPUADDR) {
+        return 0x00;
+    } else if (PpuRegister == PPUDATA) {
+        return 0x00;
     } else {
         MemoryAccessTrap(Address, 0x00, "No reading from here!");
     }
@@ -188,8 +200,6 @@ PpuRegisterWrite(bus* Bus, u16 Address, u8 Value) {
     } else if (PpuRegister == OAMDATA) {
         PpuRegisterWriteOamData(Bus, Value);
     } else {
-        // DumpU16HexExpression(Address);
-        // Halt("No writing here!");
         MemoryAccessTrap(Address, Value, "No writing here!");
     }
     //TODO: need to store properly (what?)
