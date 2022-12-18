@@ -15,4 +15,8 @@
 #define PPUDATA   (0x0007)
 #define OAMDMA    (0x4014)
 
+#define NametableTileSize            (8)
+#define NametableTileRowCount        (30)
+#define NametableTileTilePerRowCount (32)
+
 #endif

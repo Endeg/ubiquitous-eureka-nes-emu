@@ -91,7 +91,36 @@ PpuRead(bus* Bus, u16 Address) {
 
 internal void
 PpuWrite(bus* Bus, u16 Address, u8 Value) {
-    MemoryAccessTrap(Address, Value, "No writing to PPU, yet");
+    Assert(Bus->Rom->MapperId == MapperNROM);
+    Assert(Bus->Rom->Mirroring == Horizontal);
+    //TODO: Mapper should work here! For now: NROM only
+
+    if (Address >= 0x2000 && Address <= 0x3EFF) {
+        u16 NameTableAddress = Address & 0b0000111111111111;
+        if (Bus->Rom->Mirroring == Vertical) {
+            if (NameTableAddress >= 0x0000 && NameTableAddress <= 0x03FF) {
+                Bus->Ppu->NameTable[0][NameTableAddress & 0b0011111111111111] = Value;
+            } else if (NameTableAddress >= 0x0400 && NameTableAddress <= 0x07FF) {
+                Bus->Ppu->NameTable[1][NameTableAddress & 0b0011111111111111] = Value;
+            } else if (NameTableAddress >= 0x0800 && NameTableAddress <= 0x0BFF) {
+                Bus->Ppu->NameTable[0][NameTableAddress & 0b0011111111111111] = Value;
+            } else if (NameTableAddress >= 0x0C00 && NameTableAddress <= 0x0FFF) {
+                Bus->Ppu->NameTable[1][NameTableAddress & 0b0011111111111111] = Value;
+            }
+        } else if (Bus->Rom->Mirroring == Horizontal) {
+            if (NameTableAddress >= 0x0000 && NameTableAddress <= 0x03FF) {
+                Bus->Ppu->NameTable[0][NameTableAddress & 0b0011111111111111] = Value;
+            } else if (NameTableAddress >= 0x0400 && NameTableAddress <= 0x07FF) {
+                Bus->Ppu->NameTable[0][NameTableAddress & 0b0011111111111111] = Value;
+            } else if (NameTableAddress >= 0x0800 && NameTableAddress <= 0x0BFF) {
+                Bus->Ppu->NameTable[1][NameTableAddress & 0b0011111111111111] = Value;
+            } else if (NameTableAddress >= 0x0C00 && NameTableAddress <= 0x0FFF) {
+                Bus->Ppu->NameTable[1][NameTableAddress & 0b0011111111111111] = Value;
+            }
+        }
+    } else {
+        MemoryAccessTrap(Address, Value, "No writing to PPU, yet");
+    }
 }
 
 #define PatternSizeInBytes       (16)
@@ -200,6 +229,8 @@ PpuRegisterWrite(bus* Bus, u16 Address, u8 Value) {
         }
     } else if (PpuRegister == PPUDATA) {
         PpuWrite(Bus, Bus->Ppu->Address, Value);
+        u16 IncrementAmount = (Bus->Ppu->Control & IncrementModeMask) ? 32 : 1;
+        Bus->Ppu->Address += IncrementAmount;
     } else {
         MemoryAccessTrap(Address, Value, "No writing here!");
     }

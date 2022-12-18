@@ -43,6 +43,7 @@ typedef struct ppu {
     u8 Mask;
     status_register Status;
     oam Oam;
+    u8 NameTable[2][1024];
 } ppu;
 
 typedef struct ppu_pixel {

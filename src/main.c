@@ -150,6 +150,18 @@ int AppProc(app_t* App, void* UserData) {
         (u32*)DumbAllocate(&Allocator, sizeof(u32) * NesScreenWidth * NesScreenHeight),
     };
 
+    pixel_buffer NameTableVisual0 = {
+        16,
+        16,
+        (u32*)Ppu.NameTable[0],
+    };
+
+    pixel_buffer NameTableVisual1 = {
+        16,
+        16,
+        (u32*)Ppu.NameTable[1],
+    };
+
     // app_interpolation(App, APP_INTERPOLATION_NONE);
     app_screenmode(App, APP_SCREENMODE_WINDOW);
 
@@ -234,6 +246,9 @@ int AppProc(app_t* App, void* UserData) {
         // oam Oam;
 
         PixelBufferBlit(&Screen, &NesScreen, 8 * 54, 8 * 1);
+
+        PixelBufferBlit(&Screen, &NameTableVisual0, 8 * 80, 8 * 1);
+        PixelBufferBlit(&Screen, &NameTableVisual1, 8 * 80, 8 * 4);
 
         {
             i32 PatternTablesX = 8 * 54;
