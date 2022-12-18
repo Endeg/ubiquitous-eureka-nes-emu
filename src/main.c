@@ -20,6 +20,7 @@
 
 // #define RomPath ("Super Mario Bros. (JU) [!].nes")
 #define RomPath ("Donkey Kong (U) (PRG1) [!p].nes")
+// #define RomPath ("NES CPU Test by Kevin Horton (PD).nes")
 
 void
 PlatformPrint(char* FormatString, ...) {
@@ -83,6 +84,10 @@ GlobalTick(m6502_t* Cpu, u64* Pins, bus* Bus,
     PixelBufferPutPixel(Screen, Pixel.X, Pixel.Y, Pixel.Color);
 
     PpuTick(Ppu);
+
+    if (Ppu->Control & NmiEnableMask) {
+        *Pins = *Pins | M6502_NMI;
+    }
 
     if (Bus->TickCount % 3 == 0) {
         CpuTick(Cpu, Pins, Bus);

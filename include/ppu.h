@@ -99,25 +99,28 @@ PpuWrite(bus* Bus, u16 Address, u8 Value) {
         u16 NameTableAddress = Address & 0b0000111111111111;
         if (Bus->Rom->Mirroring == Vertical) {
             if (NameTableAddress >= 0x0000 && NameTableAddress <= 0x03FF) {
-                Bus->Ppu->NameTable[0][NameTableAddress & 0b0011111111111111] = Value;
+                Bus->Ppu->NameTable[0][NameTableAddress & 0b0000001111111111] = Value;
             } else if (NameTableAddress >= 0x0400 && NameTableAddress <= 0x07FF) {
-                Bus->Ppu->NameTable[1][NameTableAddress & 0b0011111111111111] = Value;
+                Bus->Ppu->NameTable[1][NameTableAddress & 0b0000001111111111] = Value;
             } else if (NameTableAddress >= 0x0800 && NameTableAddress <= 0x0BFF) {
-                Bus->Ppu->NameTable[0][NameTableAddress & 0b0011111111111111] = Value;
+                Bus->Ppu->NameTable[0][NameTableAddress & 0b0000001111111111] = Value;
             } else if (NameTableAddress >= 0x0C00 && NameTableAddress <= 0x0FFF) {
-                Bus->Ppu->NameTable[1][NameTableAddress & 0b0011111111111111] = Value;
+                Bus->Ppu->NameTable[1][NameTableAddress & 0b0000001111111111] = Value;
             }
         } else if (Bus->Rom->Mirroring == Horizontal) {
             if (NameTableAddress >= 0x0000 && NameTableAddress <= 0x03FF) {
-                Bus->Ppu->NameTable[0][NameTableAddress & 0b0011111111111111] = Value;
+                Bus->Ppu->NameTable[0][NameTableAddress & 0b0000001111111111] = Value;
             } else if (NameTableAddress >= 0x0400 && NameTableAddress <= 0x07FF) {
-                Bus->Ppu->NameTable[0][NameTableAddress & 0b0011111111111111] = Value;
+                Bus->Ppu->NameTable[0][NameTableAddress & 0b0000001111111111] = Value;
             } else if (NameTableAddress >= 0x0800 && NameTableAddress <= 0x0BFF) {
-                Bus->Ppu->NameTable[1][NameTableAddress & 0b0011111111111111] = Value;
+                Bus->Ppu->NameTable[1][NameTableAddress & 0b0000001111111111] = Value;
             } else if (NameTableAddress >= 0x0C00 && NameTableAddress <= 0x0FFF) {
-                Bus->Ppu->NameTable[1][NameTableAddress & 0b0011111111111111] = Value;
+                Bus->Ppu->NameTable[1][NameTableAddress & 0b0000001111111111] = Value;
             }
         }
+    } else if (Address >= 0x3F00 && Address <= 0x3FFF) {
+        //TODO: Palletes
+        //MemoryAccessTrap(Address, Value, "Palletes needed!");
     } else {
         MemoryAccessTrap(Address, Value, "No writing to PPU, yet");
     }
@@ -189,7 +192,11 @@ PpuRegisterRead(bus* Bus, u16 Address) {
     } else if (PpuRegister == PPUADDR) {
         return 0x00;
     } else if (PpuRegister == PPUDATA) {
-        return 0x00;
+        u8 Result = PpuRead(Bus, Bus->Ppu->Address);
+        //TODO: Make increment a post-read operation
+        u16 IncrementAmount = (Bus->Ppu->Control & IncrementModeMask) ? 32 : 1;
+        Bus->Ppu->Address += IncrementAmount;
+        return Result;
     } else {
         MemoryAccessTrap(Address, 0x00, "No reading from here!");
     }
@@ -208,9 +215,9 @@ PpuRegisterWrite(bus* Bus, u16 Address, u8 Value) {
     } else if (PpuRegister == PPUSTATUS) {
         // TODO: Check if writing to PPUSTATUS is ever legit
     } else if (PpuRegister == OAMADDR) {
-        MemoryAccessTrap(Address, Value, "OAMADDR");
+        //MemoryAccessTrap(Address, Value, "OAMADDR");
     } else if (PpuRegister == OAMDATA) {
-        MemoryAccessTrap(Address, Value, "OAMDATA");
+        //MemoryAccessTrap(Address, Value, "OAMDATA");
     } else if (PpuRegister == PPUSCROLL) {
         //TODO: Figure out scrolling
         if (Bus->Ppu->AddressLatch) {
